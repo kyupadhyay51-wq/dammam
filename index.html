@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Google Pay</title>
+<title>goggggle pau</title>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <style>
@@ -490,7 +490,7 @@
       <!-- Hero Header & UPI ID -->
       <div class="gpay-hero">
         <div class="gpay-brand-logo">
-          <span>Google Pay</span>
+          <span>goggggle pau</span>
         </div>
         <div class="gpay-upi-badge">
           <span>UPI ID: <strong>kanha9002@okaxis</strong></span>
@@ -1030,6 +1030,61 @@
     list.insertBefore(item, list.firstChild);
   }
 
+  function playGPaySuccessSound() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      
+      const now = ctx.currentTime;
+      
+      const master = ctx.createGain();
+      master.gain.setValueAtTime(0.35, now);
+      master.connect(ctx.destination);
+      
+      // Tone 1: E5 (659Hz)
+      const osc1 = ctx.createOscillator();
+      const g1 = ctx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(659.25, now);
+      g1.gain.setValueAtTime(0.001, now);
+      g1.gain.linearRampToValueAtTime(0.45, now + 0.02);
+      g1.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+      osc1.connect(g1);
+      g1.connect(master);
+      osc1.start(now);
+      osc1.stop(now + 0.42);
+      
+      // Tone 2: High E6 (1318Hz) GPay Chime
+      const osc2 = ctx.createOscillator();
+      const g2 = ctx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(1318.51, now + 0.11);
+      g2.gain.setValueAtTime(0.001, now + 0.11);
+      g2.gain.linearRampToValueAtTime(0.55, now + 0.14);
+      g2.gain.exponentialRampToValueAtTime(0.0001, now + 1.15);
+      osc2.connect(g2);
+      g2.connect(master);
+      osc2.start(now + 0.11);
+      osc2.stop(now + 1.2);
+
+      // Tone 3: B6 Crystal Overtone
+      const osc3 = ctx.createOscillator();
+      const g3 = ctx.createGain();
+      osc3.type = 'triangle';
+      osc3.frequency.setValueAtTime(1975.53, now + 0.11);
+      g3.gain.setValueAtTime(0.001, now + 0.11);
+      g3.gain.linearRampToValueAtTime(0.18, now + 0.14);
+      g3.gain.exponentialRampToValueAtTime(0.0001, now + 0.75);
+      osc3.connect(g3);
+      g3.connect(master);
+      osc3.start(now + 0.11);
+      osc3.stop(now + 0.8);
+    } catch (e) {
+      console.warn("Audio Context playback error:", e);
+    }
+  }
+
   function startPayment() {
     const amount = document.getElementById('amountInput').value || '0';
     const num = parseFloat(amount) || 0;
@@ -1049,6 +1104,9 @@
       
       // Dynamically add to Transaction History
       addTxToHistory(recipientName, recipientUpi, num);
+
+      // Play GPay 1-second Payment Success Chime Sound!
+      playGPaySuccessSound();
 
       go('success');
     }, 2100);
