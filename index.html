@@ -1146,7 +1146,7 @@
     onScanSuccess("upi://pay?pa=supermart@okaxis&pn=SuperMart Store&am=250");
   }
 
-  function resizeImageFile(file, maxWidth, maxHeight) {
+  function resizeImageFile(file, maxWidth, maxHeight, enhanceContrast = false) {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
@@ -1166,14 +1166,78 @@
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
+
+        if (enhanceContrast) {
+          const imgData = ctx.getImageData(0, 0, width, height);
+          const data = imgData.data;
+          for (let i = 0; i < data.length; i += 4) {
+            const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+            const v = avg > 120 ? 255 : 0;
+            data[i] = v;
+            data[i + 1] = v;
+            data[i + 2] = v;
+          }
+          ctx.putImageData(imgData, 0, 0);
+        }
+
         canvas.toBlob((blob) => {
           if (blob) resolve(blob);
           else reject(new Error("Canvas blob failed"));
-        }, 'image/jpeg', 0.9);
+        }, 'image/jpeg', 0.95);
       };
       img.onerror = (e) => reject(e);
       img.src = URL.createObjectURL(file);
     });
+  }
+
+  async function readQrFromImageFile(file) {
+    // 1. Native Browser BarcodeDetector (Chrome/Android WebView - Instant 100% accurate QR reader)
+    if ('BarcodeDetector' in window) {
+      try {
+        const detector = new BarcodeDetector({ formats: ['qr_code'] });
+        const img = await createImageBitmap(file);
+        const barcodes = await detector.detect(img);
+        if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
+          console.log("Native BarcodeDetector success:", barcodes[0].rawValue);
+          return barcodes[0].rawValue;
+        }
+      } catch (e) {
+        console.warn("Native BarcodeDetector attempt:", e);
+      }
+    }
+
+    // Ensure Html5Qrcode instance
+    if (!html5QrCode) {
+      try {
+        html5QrCode = new Html5Qrcode("qr-reader");
+      } catch(e) {
+        const el = document.getElementById('qr-reader');
+        if (el) el.innerHTML = '';
+        html5QrCode = new Html5Qrcode("qr-reader");
+      }
+    }
+
+    // 2. Pass 1: Direct in-memory scan (renderImage = false)
+    try {
+      const text1 = await html5QrCode.scanFile(file, false);
+      if (text1) return text1;
+    } catch (e1) {}
+
+    // 3. Pass 2: Rescaled 800px image scan
+    try {
+      const blob2 = await resizeImageFile(file, 800, 800, false);
+      const text2 = await html5QrCode.scanFile(blob2, false);
+      if (text2) return text2;
+    } catch (e2) {}
+
+    // 4. Pass 3: High-contrast binarized 600px image scan
+    try {
+      const blob3 = await resizeImageFile(file, 600, 600, true);
+      const text3 = await html5QrCode.scanFile(blob3, false);
+      if (text3) return text3;
+    } catch (e3) {}
+
+    throw new Error("Unable to decode QR code");
   }
 
   async function handleQrUpload(input) {
@@ -1181,40 +1245,23 @@
     const file = input.files[0];
     
     // Stop active camera scan before file scan
-    if (html5QrCode && scanRunning) {
-      await html5QrCode.stop().catch(() => {});
-      scanRunning = false;
+    if (scanRunning) {
+      stopScan();
     }
 
-    if (!html5QrCode) {
-      try {
-        html5QrCode = new Html5Qrcode("qr-reader");
-      } catch(e) {
-        document.getElementById('qr-reader').innerHTML = '';
-        html5QrCode = new Html5Qrcode("qr-reader");
+    try {
+      const decodedText = await readQrFromImageFile(file);
+      console.log("Image QR decoded text:", decodedText);
+      onScanSuccess(decodedText);
+    } catch (err) {
+      console.warn("All image QR decoding attempts failed:", err);
+      const manualInput = prompt("Unable to auto-detect QR code from image quality. Please enter the UPI ID or Mobile Number manually (e.g. name@oksbi / 9876543210@ybl):");
+      if (manualInput && manualInput.trim()) {
+        onScanSuccess(manualInput.trim());
       }
+    } finally {
+      input.value = '';
     }
-
-    // Try scanning file directly first
-    html5QrCode.scanFile(file, true)
-      .then(decodedText => {
-        onScanSuccess(decodedText);
-      })
-      .catch(async (err) => {
-        console.warn("Direct scanFile failed, trying canvas rescaled scan...", err);
-        try {
-          // Downscale high-resolution photo from phone gallery and retry
-          const resizedBlob = await resizeImageFile(file, 800, 800);
-          const text = await html5QrCode.scanFile(resizedBlob, true);
-          onScanSuccess(text);
-        } catch (err2) {
-          console.error("Rescaled image scan failed:", err2);
-          const userUpi = prompt("Could not auto-read QR from image quality. Please enter the UPI ID / VPA manually:");
-          if (userUpi && userUpi.trim()) {
-            onScanSuccess(userUpi.trim());
-          }
-        }
-      });
   }
 
   async function startScan() {
