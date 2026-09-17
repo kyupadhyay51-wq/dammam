@@ -8,70 +8,81 @@
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&display=swap');
+  
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  
   html, body {
     height: 100%;
     font-family: 'Roboto', 'Google Sans', system-ui, -apple-system, sans-serif;
-    background: #fff;
+    background: #f8f9fa;
     color: #202124;
     max-width: 420px;
     margin: 0 auto;
     overflow: hidden;
     position: relative;
+    box-shadow: 0 0 20px rgba(0,0,0,0.08);
   }
+
+  /* Status Bar */
   .status-bar {
-    height: 28px;
+    height: 32px;
     background: #fff;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 14px;
-    font-size: 12px;
+    padding: 0 16px;
+    font-size: 13px;
     font-weight: 500;
     color: #202124;
     z-index: 100;
   }
-  .status-right { display: flex; gap: 7px; align-items: center; }
-  .dot { width: 4px; height: 4px; background: #202124; border-radius: 50%; }
-  .sig { width: 15px; height: 11px; background: linear-gradient(to top, #202124 30%, #202124 30%, transparent 30%); border-radius: 1px; position: relative; }
-  .sig::before { content:''; position:absolute; right:-3px; top:3px; width:2px; height:5px; background:#202124; border-radius:0 1px 1px 0; }
-  .bat { width: 20px; height: 10px; border: 1.5px solid #202124; border-radius: 2px; position: relative; }
-  .bat::after { content:''; position:absolute; right:-3px; top:2px; width:2px; height:4px; background:#202124; border-radius:0 1px 1px 0; }
-  .bat-fill { position:absolute; left:1px; top:1px; bottom:1px; width:70%; background:#202124; border-radius:1px; }
+  .status-right { display: flex; gap: 6px; align-items: center; }
+  .sig-bars { display: flex; gap: 2px; align-items: flex-end; height: 11px; }
+  .bar { width: 3px; background: #202124; border-radius: 0.5px; }
+  .bar-1 { height: 3px; } .bar-2 { height: 5px; } .bar-3 { height: 8px; } .bar-4 { height: 11px; }
+  .bat { width: 22px; height: 11px; border: 1.5px solid #202124; border-radius: 3px; position: relative; padding: 1px; }
+  .bat::after { content:''; position:absolute; right:-3.5px; top:2.5px; width:2px; height:4px; background:#202124; border-radius:0 1px 1px 0; }
+  .bat-fill { width: 75%; height: 100%; background: #202124; border-radius: 1px; }
 
+  /* App Screen Wrapper */
   .screen {
     display: none;
     flex-direction: column;
-    height: calc(100vh - 28px);
-    height: calc(100dvh - 28px);
+    height: calc(100vh - 32px);
+    height: calc(100dvh - 32px);
     background: #fff;
     position: absolute;
-    top: 28px; left: 0; right: 0; bottom: 0;
+    top: 32px; left: 0; right: 0; bottom: 0;
     overflow: hidden;
   }
   .screen.active { display: flex; }
 
-  /* ===== HOME (EXACT GPAY UI) ===== */
+  /* ===== HOME SCREEN ===== */
   .home-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 72px; background: #fff; }
   
+  /* Top Search Header */
   .gpay-search-row {
     display: flex; align-items: center; gap: 12px;
     padding: 10px 16px; background: #fff; position: sticky; top: 0; z-index: 10;
   }
   .gpay-search-pill {
-    flex: 1; height: 46px; background: #f1f3f4; border-radius: 23px;
+    flex: 1; height: 48px; background: #f1f3f4; border-radius: 24px;
     display: flex; align-items: center; padding: 0 16px; gap: 12px;
     color: #5f6368; font-size: 14px; cursor: pointer; border: 1px solid #e8eaed;
+    transition: background 0.15s ease;
   }
-  .gpay-search-pill span { flex: 1; font-weight: 400; color: #5f6368; }
+  .gpay-search-pill:active { background: #e8eaed; }
+  .gpay-search-pill span { flex: 1; font-weight: 400; color: #5f6368; font-size: 14px; }
+  
   .gpay-avatar {
-    width: 38px; height: 38px; border-radius: 50%;
-    background: linear-gradient(135deg, #4285f4, #34a853);
-    color: #fff; font-weight: 500; font-size: 16px;
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, #1a73e8, #34a853);
+    color: #fff; font-weight: 500; font-size: 17px;
     display: flex; align-items: center; justify-content: center; cursor: pointer;
-    box-shadow: 0 1px 3px rgba(60,64,67,0.2);
+    box-shadow: 0 1px 3px rgba(60,64,67,0.2); flex-shrink: 0;
   }
 
+  /* Hero Section */
   .gpay-hero {
     background: linear-gradient(180deg, #e8f0fe 0%, #ffffff 100%);
     padding: 12px 16px 16px; text-align: center;
@@ -80,7 +91,7 @@
     display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 8px;
   }
   .gpay-brand-logo span {
-    font-family: 'Google Sans', sans-serif; font-size: 22px; font-weight: 700; color: #1a73e8; letter-spacing: -0.5px;
+    font-family: 'Google Sans', sans-serif; font-size: 23px; font-weight: 700; color: #1a73e8; letter-spacing: -0.5px;
   }
   .gpay-upi-badge {
     display: inline-flex; align-items: center; gap: 8px;
@@ -89,6 +100,10 @@
     box-shadow: 0 1px 3px rgba(60,64,67,0.08);
   }
   .gpay-upi-badge strong { color: #202124; font-weight: 500; }
+  .copy-upi {
+    border: none; background: #e8f0fe; color: #1a73e8; padding: 3px 8px;
+    border-radius: 10px; font-size: 11px; font-weight: 500; cursor: pointer;
+  }
 
   /* 8 Quick Action Items Grid (2x4) */
   .quick-grid-8 {
@@ -99,23 +114,25 @@
     display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer;
   }
   .grid-action-icon {
-    width: 50px; height: 50px; border-radius: 16px;
-    background: #e8f0fe; color: #1a73e8; font-size: 20px;
+    width: 52px; height: 52px; border-radius: 18px;
+    background: #e8f0fe; color: #1a73e8;
     display: flex; align-items: center; justify-content: center;
     transition: transform 0.15s ease, background-color 0.15s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
   }
   .grid-action-item:active .grid-action-icon { transform: scale(0.92); background: #d2e3fc; }
   .grid-action-label {
-    font-size: 11px; color: #202124; text-align: center; line-height: 1.25; font-weight: 400;
+    font-size: 11.5px; color: #202124; text-align: center; line-height: 1.25; font-weight: 400;
   }
 
-  /* Section Title styling */
+  /* Section Title */
   .gpay-section-header {
-    display: flex; justify-space-between; align-items: center;
+    display: flex; justify-content: space-between; align-items: center;
     padding: 20px 16px 12px;
   }
   .gpay-section-title {
     font-size: 16px; font-weight: 500; color: #202124; letter-spacing: -0.2px;
+    font-family: 'Google Sans', sans-serif;
   }
   .gpay-section-more {
     font-size: 13px; font-weight: 500; color: #1a73e8; cursor: pointer;
@@ -131,27 +148,28 @@
   .person-circle {
     width: 52px; height: 52px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 18px; font-weight: 500; color: #fff;
-    box-shadow: 0 1px 3px rgba(60,64,67,0.12);
+    font-size: 19px; font-weight: 500; color: #fff;
+    box-shadow: 0 1px 3px rgba(60,64,67,0.15);
   }
-  .person-circle.blue { background: #4285f4; }
-  .person-circle.red { background: #ea4335; }
-  .person-circle.yellow { background: #fbbc04; color: #202124; }
-  .person-circle.green { background: #34a853; }
-  .person-circle.purple { background: #9c27b0; }
-  .person-circle.orange { background: #ff9800; }
-  .person-circle.teal { background: #009688; }
+  .person-circle.blue { background: #1a73e8; }
+  .person-circle.red { background: #d93025; }
+  .person-circle.yellow { background: #f9ab00; color: #fff; }
+  .person-circle.green { background: #1e8e3e; }
+  .person-circle.purple { background: #a142f4; }
+  .person-circle.orange { background: #fa7b17; }
+  .person-circle.teal { background: #129eaf; }
   .person-circle.add { background: #e8f0fe; color: #1a73e8; border: 1.5px dashed #1a73e8; font-size: 22px; }
   .person-name-text {
-    font-size: 11px; color: #202124; max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center;
+    font-size: 11.5px; color: #202124; max-width: 68px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center;
   }
 
   /* Businesses & Bills */
   .biz-circle {
-    width: 50px; height: 50px; border-radius: 50%;
+    width: 52px; height: 52px; border-radius: 50%;
     background: #f8f9fa; border: 1px solid #e8eaed;
     display: flex; align-items: center; justify-content: center;
-    font-size: 18px; font-weight: 700; color: #202124;
+    font-size: 14px; font-weight: 700; color: #202124;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
   }
 
   /* Promo Cards (Rewards & Offers) */
@@ -162,18 +180,18 @@
     display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer;
   }
   .promo-icon {
-    width: 52px; height: 52px; border-radius: 16px;
-    display: flex; align-items: center; justify-content: center; font-size: 22px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.06); position: relative; background: #f8f9fa;
+    width: 52px; height: 52px; border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05); position: relative; background: #fff;
     border: 1px solid #e8eaed;
   }
   .promo-badge {
     position: absolute; top: -5px; right: -5px;
-    background: #ea4335; color: #fff; font-size: 8px; font-weight: 700;
+    background: #d93025; color: #fff; font-size: 8px; font-weight: 700;
     padding: 2px 5px; border-radius: 10px; text-transform: uppercase;
   }
 
-  /* Manage Money List (Real GPay list) */
+  /* Manage Money List */
   .money-list { padding: 8px 16px 24px; border-top: 1px solid #f1f3f4; margin-top: 8px; }
   .money-item {
     display: flex; align-items: center; gap: 16px; padding: 14px 0;
@@ -181,33 +199,15 @@
   }
   .money-item:active { background: #f8f9fa; }
   .money-icon {
-    width: 24px; height: 24px; color: #1a73e8; font-size: 20px;
+    width: 24px; height: 24px; color: #1a73e8;
     display: flex; align-items: center; justify-content: center;
   }
   .money-info { flex: 1; }
   .money-title { font-size: 14px; font-weight: 500; color: #202124; }
   .money-sub { font-size: 12px; color: #5f6368; margin-top: 2px; }
-  .money-arrow { color: #5f6368; font-size: 16px; }
+  .money-arrow { color: #5f6368; font-size: 18px; }
 
-  /* GPay Footer */
-  .gpay-footer-brand {
-    text-align: center; padding: 24px 16px 36px; background: #f8f9fa; color: #5f6368; font-size: 12px;
-  }
-
-  /* Balance Modal */
-  .modal-overlay {
-    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-    z-index: 1000; align-items: flex-end; justify-content: center;
-    backdrop-filter: blur(2px);
-  }
-  .modal-overlay.active { display: flex; }
-  .modal-card {
-    width: 100%; max-width: 420px; background: #fff;
-    border-radius: 24px 24px 0 0; padding: 24px 20px 32px;
-    animation: slideUp 0.25s cubic-bezier(0,0,0.2,1);
-  }
-  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-
+  /* Bottom Navigation */
   .bottom-nav {
     position: absolute; bottom: 0; left: 0; right: 0;
     height: 64px; background: #fff;
@@ -218,32 +218,31 @@
   }
   .nav-item {
     display: flex; flex-direction: column; align-items: center; gap: 3px;
-    color: #5f6368; font-size: 10px; cursor: pointer; min-width: 56px;
+    color: #5f6368; font-size: 11px; cursor: pointer; min-width: 56px;
+    font-weight: 500;
   }
   .nav-item.active { color: #1a73e8; }
-  .nav-item .icon { font-size: 20px; line-height: 1; }
+  .nav-item .icon-svg { width: 22px; height: 22px; fill: currentColor; }
 
-  /* ===== HEADER ===== */
+  /* Header Bar */
   .header {
     display: flex; align-items: center;
-    padding: 8px 8px 8px 4px;
-    background: #fff;
+    padding: 8px 12px; background: #fff;
     border-bottom: 1px solid #e8eaed;
-    min-height: 52px;
-    flex-shrink: 0;
+    min-height: 52px; flex-shrink: 0;
   }
   .back-btn {
-    width: 44px; height: 44px; border: none; background: none;
+    width: 40px; height: 40px; border: none; background: none;
     font-size: 22px; color: #5f6368; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
+    display: flex; align-items: center; justify-content: center; border-radius: 50%;
   }
-  .header-title { flex: 1; font-size: 17px; font-weight: 500; color: #202124; }
-  .header-icons { display: flex; gap: 12px; padding-right: 8px; }
-  .header-icons span { font-size: 18px; color: #5f6368; cursor: pointer; }
+  .back-btn:active { background: #f1f3f4; }
+  .header-title { flex: 1; font-size: 18px; font-weight: 500; color: #202124; font-family: 'Google Sans', sans-serif; }
+  .header-icons { display: flex; gap: 12px; padding-right: 4px; }
 
-  /* ===== SCAN ===== */
+  /* ===== SCAN SCREEN ===== */
   #scan .header { background: #000; border: none; }
-  #scan .back-btn, #scan .header-title, #scan .header-icons span { color: #fff; }
+  #scan .back-btn, #scan .header-title, #scan .header-icons label { color: #fff; }
   .scan-area {
     flex: 1; background: #000; position: relative;
     display: flex; align-items: center; justify-content: center; overflow: hidden;
@@ -251,9 +250,9 @@
   #qr-reader { width: 100%; height: 100%; position: absolute; inset: 0; }
   #qr-reader video { object-fit: cover !important; width: 100% !important; height: 100% !important; }
   .scan-frame {
-    width: 240px; height: 240px; border: 2px solid rgba(255,255,255,0.85);
-    border-radius: 18px; position: relative; z-index: 5;
-    box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
+    width: 250px; height: 250px; border: 2px solid rgba(255,255,255,0.85);
+    border-radius: 20px; position: relative; z-index: 5;
+    box-shadow: 0 0 0 9999px rgba(0,0,0,0.55);
     pointer-events: none;
   }
   .scan-frame .c {
@@ -265,8 +264,9 @@
   .scan-frame .c.bl { bottom: -2px; left: -2px; border-right: none; border-top: none; border-radius: 0 0 0 10px; }
   .scan-frame .c.br { bottom: -2px; right: -2px; border-left: none; border-top: none; border-radius: 0 0 10px 0; }
   .scan-line {
-    position: absolute; left: 8px; right: 8px; height: 2px;
+    position: absolute; left: 10px; right: 10px; height: 2.5px;
     background: linear-gradient(90deg, transparent, #34a853, transparent);
+    box-shadow: 0 0 8px #34a853;
     animation: scanY 2.2s ease-in-out infinite;
   }
   @keyframes scanY {
@@ -279,71 +279,71 @@
   }
   .scan-options-bar {
     position: absolute; bottom: 20px; left: 0; right: 0;
-    display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;
+    display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;
     padding: 0 12px; z-index: 10;
   }
   .scan-pill-btn {
     background: rgba(255,255,255,0.22); border: 1px solid rgba(255,255,255,0.35);
-    color: #fff; padding: 8px 14px; border-radius: 20px; font-size: 12px;
+    color: #fff; padding: 9px 16px; border-radius: 20px; font-size: 13px;
     font-weight: 500; cursor: pointer; backdrop-filter: blur(10px);
-    display: inline-flex; align-items: center; gap: 4px; text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    display: inline-flex; align-items: center; gap: 6px; text-shadow: 0 1px 2px rgba(0,0,0,0.5);
   }
   .scan-pill-btn:active { background: rgba(255,255,255,0.4); }
-  .scan-manual {
-    position: absolute; top: 16px; right: 16px; z-index: 6;
-    background: rgba(0,0,0,0.45); color: #fff; border: none;
-    padding: 8px 14px; border-radius: 20px; font-size: 13px; cursor: pointer;
-  }
 
-  /* ===== PAY UPI / AMOUNT ===== */
+  /* ===== PAY AMOUNT SCREEN ===== */
   .pay-body { flex: 1; padding: 20px 18px; overflow-y: auto; }
   .recipient-card {
     display: flex; align-items: center; gap: 14px;
-    padding: 14px; background: #f8f9fa; border-radius: 12px; margin-bottom: 24px;
+    padding: 14px; background: #f8f9fa; border-radius: 16px; margin-bottom: 24px;
+    border: 1px solid #e8eaed;
   }
   .recipient-avatar {
-    width: 46px; height: 46px; border-radius: 50%;
+    width: 48px; height: 48px; border-radius: 50%;
     background: #e8f0fe; color: #1a73e8;
     display: flex; align-items: center; justify-content: center;
-    font-weight: 500; font-size: 17px; flex-shrink: 0;
+    font-weight: 500; font-size: 18px; flex-shrink: 0;
   }
-  .recipient-info h3 { font-size: 15px; font-weight: 500; }
+  .recipient-info h3 { font-size: 16px; font-weight: 500; font-family: 'Google Sans', sans-serif; }
   .recipient-info p { font-size: 13px; color: #5f6368; margin-top: 2px; word-break: break-all; }
-  .amount-section { text-align: center; margin-bottom: 20px; }
-  .currency-row { display: flex; align-items: center; justify-content: center; gap: 2px; }
-  .currency-symbol { font-size: 32px; color: #5f6368; font-weight: 400; }
+  
+  .amount-section { text-align: center; margin-bottom: 20px; margin-top: 30px; }
+  .currency-row { display: flex; align-items: center; justify-content: center; gap: 4px; }
+  .currency-symbol { font-size: 36px; color: #202124; font-weight: 400; font-family: 'Google Sans', sans-serif; }
   .amount-input {
-    font-size: 44px; font-weight: 400; border: none; outline: none;
-    text-align: center; width: 200px; background: transparent; color: #202124;
-    letter-spacing: -1px;
+    font-size: 48px; font-weight: 400; border: none; outline: none;
+    text-align: center; width: 220px; background: transparent; color: #202124;
+    letter-spacing: -1px; font-family: 'Google Sans', sans-serif;
   }
   .amount-input::placeholder { color: #dadce0; }
   .note-input {
     width: 100%; border: none; border-bottom: 1px solid #dadce0;
-    padding: 12px 0; font-size: 15px; outline: none; background: transparent; margin-top: 12px;
+    padding: 12px 0; font-size: 15px; outline: none; background: transparent; margin-top: 24px;
+    text-align: center;
   }
   .note-input::placeholder { color: #9aa0a6; }
+
   .pay-footer {
-    padding: 14px 18px 22px; background: #fff;
+    padding: 16px 18px 24px; background: #fff;
     border-top: 1px solid #e8eaed; flex-shrink: 0;
   }
   .pay-btn {
     width: 100%; height: 50px; background: #1a73e8; color: #fff;
     border: none; border-radius: 25px; font-size: 15px; font-weight: 500;
     cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-family: 'Google Sans', sans-serif; box-shadow: 0 1px 3px rgba(26,115,232,0.3);
   }
-  .pay-btn:disabled { background: #dadce0; color: #9aa0a6; cursor: not-allowed; }
+  .pay-btn:disabled { background: #dadce0; color: #9aa0a6; cursor: not-allowed; box-shadow: none; }
   .pay-btn:active:not(:disabled) { background: #1765cc; }
 
   .upi-input-wrap { margin-bottom: 16px; }
   .upi-label { font-size: 13px; color: #5f6368; margin-bottom: 8px; }
   .upi-field {
-    width: 100%; height: 50px; border: 1px solid #dadce0; border-radius: 8px;
-    padding: 0 14px; font-size: 15px; outline: none;
+    width: 100%; height: 50px; border: 1px solid #dadce0; border-radius: 12px;
+    padding: 0 16px; font-size: 15px; outline: none; background: #fff;
   }
   .upi-field:focus { border-color: #1a73e8; box-shadow: 0 0 0 2px rgba(26,115,232,0.18); }
 
-  /* ===== PROCESS ===== */
+  /* ===== PROCESS SCREEN ===== */
   .process-body {
     flex: 1; display: flex; flex-direction: column;
     align-items: center; justify-content: center; padding: 40px 24px;
@@ -354,122 +354,86 @@
     animation: spin 0.75s linear infinite; margin-bottom: 24px;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .process-text { font-size: 17px; font-weight: 500; color: #202124; margin-bottom: 6px; }
+  .process-text { font-size: 18px; font-weight: 500; color: #202124; margin-bottom: 6px; font-family: 'Google Sans', sans-serif; }
   .process-sub { font-size: 13px; color: #5f6368; text-align: center; }
 
-  /* ===== SUCCESS (exact screenshot match) ===== */
+  /* ===== SUCCESS SCREEN (EXACT GPAY MATCH) ===== */
   .success-screen {
-    background: #fff;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+    background: #fff; display: flex; flex-direction: column; height: 100%;
   }
   .success-body {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 24px 28px 20px;
-    text-align: center;
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 24px 28px 20px; text-align: center;
   }
   .success-check {
-    width: 72px; height: 72px;
-    border-radius: 50%;
-    background: #1a73e8;
-    display: flex; align-items: center; justify-content: center;
-    margin-bottom: 28px;
+    width: 76px; height: 76px; border-radius: 50%;
+    background: #1a73e8; display: flex; align-items: center; justify-content: center;
+    margin-bottom: 28px; box-shadow: 0 4px 14px rgba(26,115,232,0.35);
     animation: popIn 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
   @keyframes popIn {
     0% { transform: scale(0); opacity: 0; }
     100% { transform: scale(1); opacity: 1; }
   }
-  .success-check svg { width: 36px; height: 36px; }
+  .success-check svg { width: 38px; height: 38px; }
   .success-amount {
-    font-size: 32px;
-    font-weight: 400;
-    color: #202124;
-    margin-bottom: 10px;
-    letter-spacing: -0.4px;
+    font-size: 34px; font-weight: 400; color: #202124;
+    margin-bottom: 10px; letter-spacing: -0.4px; font-family: 'Google Sans', sans-serif;
   }
-  .success-to {
-    font-size: 15px;
-    color: #202124;
-    font-weight: 400;
-    margin-bottom: 2px;
-  }
-  .success-name {
-    font-size: 15px;
-    color: #5f6368;
-    margin-bottom: 18px;
-  }
-  .success-meta {
-    font-size: 13px;
-    color: #9aa0a6;
-    line-height: 1.55;
-  }
-  .success-meta .date-line { margin-bottom: 2px; }
+  .success-to { font-size: 15px; color: #202124; font-weight: 400; margin-bottom: 2px; }
+  .success-name { font-size: 15px; color: #5f6368; margin-bottom: 20px; }
+  .success-meta { font-size: 13px; color: #80868b; line-height: 1.6; }
   .success-actions {
-    display: flex;
-    gap: 12px;
-    width: 100%;
-    max-width: 320px;
-    padding: 0 8px 12px;
+    display: flex; gap: 12px; width: 100%; max-width: 340px; padding: 0 16px 16px;
   }
   .success-btn {
-    flex: 1;
-    height: 44px;
-    border-radius: 22px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
+    flex: 1; height: 46px; border-radius: 23px; font-size: 14px;
+    font-weight: 500; cursor: pointer; display: flex; align-items: center;
+    justify-content: center; gap: 6px; font-family: 'Google Sans', sans-serif;
   }
-  .success-btn.outline {
-    background: #fff;
-    color: #1a73e8;
-    border: 1.5px solid #dadce0;
-  }
-  .success-btn.primary {
-    background: #1a73e8;
-    color: #fff;
-    border: none;
-  }
+  .success-btn.outline { background: #fff; color: #1a73e8; border: 1.5px solid #dadce0; }
+  .success-btn.primary { background: #1a73e8; color: #fff; border: none; box-shadow: 0 1px 3px rgba(26,115,232,0.3); }
   .success-btn.primary:active { background: #1765cc; }
-  .upi-logo-wrap {
-    padding: 16px 0 28px;
-    text-align: center;
-  }
-  .upi-logo-wrap img, .upi-logo-wrap svg {
-    height: 28px;
-    opacity: 0.85;
-  }
-  .upi-powered {
-    font-size: 10px;
-    color: #9aa0a6;
-    letter-spacing: 0.3px;
-    margin-bottom: 4px;
-  }
 
-  /* HISTORY / PROFILE / stubs */
-  .empty-stub {
-    flex: 1; display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    padding: 40px 24px; text-align: center; color: #5f6368;
+  .upi-logo-wrap { padding: 12px 0 24px; text-align: center; }
+  .upi-powered { font-size: 10px; color: #9aa0a6; letter-spacing: 0.5px; margin-bottom: 4px; font-weight: 500; }
+
+  /* History items */
+  .tx-list { padding: 0; }
+  .tx-item { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-bottom: 1px solid #f1f3f4; }
+  .tx-avatar { width: 42px; height: 42px; border-radius: 50%; background: #e8f0fe; color: #1a73e8; display: flex; align-items: center; justify-content: center; font-weight: 500; font-size: 16px; }
+  .tx-info { flex: 1; }
+  .tx-info h4 { font-size: 14px; font-weight: 500; color: #202124; }
+  .tx-info p { font-size: 12px; color: #5f6368; margin-top: 2px; }
+  .tx-amount { font-size: 15px; font-weight: 500; }
+  .tx-amount.debit { color: #202124; }
+  .tx-amount.credit { color: #1e8e3e; }
+
+  /* Modals */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    z-index: 1000; align-items: flex-end; justify-content: center; backdrop-filter: blur(2px);
   }
-  .empty-stub p { font-size: 14px; margin-bottom: 6px; }
+  .modal-overlay.active { display: flex; }
+  .modal-card {
+    width: 100%; max-width: 420px; background: #fff; border-radius: 24px 24px 0 0;
+    padding: 24px 20px 32px; animation: slideUp 0.25s cubic-bezier(0,0,0.2,1);
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+  .empty-stub { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 24px; text-align: center; color: #5f6368; }
+  .empty-stub p { font-size: 15px; margin-bottom: 6px; }
   .empty-stub .sub { font-size: 13px; color: #9aa0a6; }
 </style>
 </head>
 <body>
+
+  <!-- Status Bar -->
   <div class="status-bar">
-    <span id="clock">16:58</span>
+    <span id="clock">18:25</span>
     <div class="status-right">
-      <div class="sig"></div>
+      <div class="sig-bars"><div class="bar bar-1"></div><div class="bar bar-2"></div><div class="bar bar-3"></div><div class="bar bar-4"></div></div>
+      <span style="font-size:11px;font-weight:700;margin-left:2px;margin-right:2px;">5G</span>
       <div class="bat"><div class="bat-fill"></div></div>
     </div>
   </div>
@@ -481,7 +445,9 @@
       <!-- Top Search Bar -->
       <div class="gpay-search-row">
         <div class="gpay-search-pill" onclick="go('payupi')">
-          <span>🔍</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" fill="#5f6368"/>
+          </svg>
           <span>Pay anyone on UPI</span>
         </div>
         <div class="gpay-avatar" onclick="go('profile')">K</div>
@@ -490,6 +456,13 @@
       <!-- Hero Header & UPI ID -->
       <div class="gpay-hero">
         <div class="gpay-brand-logo">
+          <!-- Google Multi-color G logo SVG -->
+          <svg width="24" height="24" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
           <span>goggggle pau</span>
         </div>
         <div class="gpay-upi-badge">
@@ -501,35 +474,82 @@
       <!-- 8 Core Actions Grid (2 rows x 4 cols) -->
       <div class="quick-grid-8">
         <div class="grid-action-item" onclick="go('scan')">
-          <div class="grid-action-icon">📷</div>
+          <div class="grid-action-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+              <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+              <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+              <path d="M14 14h3v3h-3zM17 17h4v4h-4zM14 20h3v1h-3z"/>
+            </svg>
+          </div>
           <span class="grid-action-label">Scan any<br>QR code</span>
         </div>
         <div class="grid-action-item" onclick="go('payupi')">
-          <div class="grid-action-icon">👤</div>
+          <div class="grid-action-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
           <span class="grid-action-label">Pay<br>contacts</span>
         </div>
         <div class="grid-action-item" onclick="go('payupi')">
-          <div class="grid-action-icon">📱</div>
+          <div class="grid-action-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="3"/>
+              <line x1="12" y1="18" x2="12.01" y2="18" stroke-width="3"/>
+            </svg>
+          </div>
           <span class="grid-action-label">Pay phone<br>number</span>
         </div>
         <div class="grid-action-item" onclick="go('bank')">
-          <div class="grid-action-icon">🏦</div>
+          <div class="grid-action-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 21h18M3 10h18M5 10v11M9 10v11M15 10v11M19 10v11M12 3L2 10h20L12 3z"/>
+            </svg>
+          </div>
           <span class="grid-action-label">Bank<br>transfer</span>
         </div>
         <div class="grid-action-item" onclick="go('payupi')">
-          <div class="grid-action-icon">✉️</div>
+          <div class="grid-action-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="4"/>
+              <path d="M16 12v1a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8"/>
+            </svg>
+          </div>
           <span class="grid-action-label">Pay UPI ID<br>or number</span>
         </div>
         <div class="grid-action-item" onclick="go('self')">
-          <div class="grid-action-icon">🔄</div>
+          <div class="grid-action-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="17 1 21 5 17 9"/>
+              <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+              <polyline points="7 23 3 19 7 15"/>
+              <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+            </svg>
+          </div>
           <span class="grid-action-label">Self<br>transfer</span>
         </div>
         <div class="grid-action-item" onclick="go('payupi')">
-          <div class="grid-action-icon">📄</div>
+          <div class="grid-action-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+          </div>
           <span class="grid-action-label">Pay<br>bills</span>
         </div>
         <div class="grid-action-item" onclick="go('payupi')">
-          <div class="grid-action-icon">📲</div>
+          <div class="grid-action-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="6" y="2" width="12" height="20" rx="2"/>
+              <path d="M13 7l-3 5h4l-3 5"/>
+            </svg>
+          </div>
           <span class="grid-action-label">Mobile<br>recharge</span>
         </div>
       </div>
@@ -602,20 +622,44 @@
         <div class="gpay-section-title">Promotions</div>
       </div>
       <div class="promo-grid">
-        <div class="promo-item" onclick="alert('Congratulations! You have 3 scratch cards available in Rewards.')">
-          <div class="promo-icon" style="background:#e8f0fe;color:#1a73e8;">🎁<span class="promo-badge">₹525</span></div>
+        <div class="promo-item" onclick="alert('Rewards: You have 3 scratch cards available!')">
+          <div class="promo-icon" style="background:#e8f0fe;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="2">
+              <rect x="2" y="7" width="20" height="14" rx="2"/>
+              <path d="M16 21V7M8 21V7M12 7V3.5A2.5 2.5 0 0 0 9.5 1h0A2.5 2.5 0 0 0 7 3.5V7M12 7V3.5A2.5 2.5 0 0 1 14.5 1h0A2.5 2.5 0 0 1 17 3.5V7"/>
+            </svg>
+            <span class="promo-badge">₹525</span>
+          </div>
           <span class="person-name-text">Rewards</span>
         </div>
-        <div class="promo-item" onclick="alert('Offers: Get up to ₹100 cashback on mobile recharge & bills!')">
-          <div class="promo-icon" style="background:#feefe3;color:#e65100;">🏷️</div>
+        <div class="promo-item" onclick="alert('Offers: Get up to ₹100 cashback on bill payments!')">
+          <div class="promo-icon" style="background:#feefe3;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#e65100" stroke-width="2">
+              <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+              <line x1="7" y1="7" x2="7.01" y2="7" stroke-width="3"/>
+            </svg>
+          </div>
           <span class="person-name-text">Offers</span>
         </div>
-        <div class="promo-item" onclick="alert('Referral Code: kanha9002 - Invite friends and get ₹201 on their first payment!')">
-          <div class="promo-icon" style="background:#e6f4ea;color:#137333;">👥<span class="promo-badge">₹201</span></div>
+        <div class="promo-item" onclick="alert('Referrals: Invite friends and get ₹201 when they pay!')">
+          <div class="promo-icon" style="background:#e6f4ea;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#137333" stroke-width="2">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="8.5" cy="7" r="4"/>
+              <line x1="20" y1="8" x2="20" y2="14"/>
+              <line x1="17" y1="11" x2="23" y2="11"/>
+            </svg>
+            <span class="promo-badge">₹201</span>
+          </div>
           <span class="person-name-text">Referrals</span>
         </div>
-        <div class="promo-item" onclick="alert('Indi-Home: Complete transactions to build houses and earn rewards!')">
-          <div class="promo-icon" style="background:#fce8e6;color:#d93025;">🏡</div>
+        <div class="promo-item" onclick="alert('Indi-Home: Complete transactions to build houses and win rewards!')">
+          <div class="promo-icon" style="background:#fce8e6;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#d93025" stroke-width="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+          </div>
           <span class="person-name-text">Indi-Home</span>
         </div>
       </div>
@@ -626,7 +670,12 @@
       </div>
       <div class="money-list">
         <div class="money-item" onclick="alert('Your CIBIL Score is 785 (Excellent) ⭐')">
-          <div class="money-icon">📊</div>
+          <div class="money-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="2">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </div>
           <div class="money-info">
             <div class="money-title">Check your CIBIL score for free</div>
             <div class="money-sub">Get free credit report & insights</div>
@@ -634,7 +683,12 @@
           <div class="money-arrow">›</div>
         </div>
         <div class="money-item" onclick="go('history')">
-          <div class="money-icon">📜</div>
+          <div class="money-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
           <div class="money-info">
             <div class="money-title">See all payment history</div>
             <div class="money-sub">View previous transactions & receipts</div>
@@ -642,7 +696,11 @@
           <div class="money-arrow">›</div>
         </div>
         <div class="money-item" onclick="showBalanceModal()">
-          <div class="money-icon">🏦</div>
+          <div class="money-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="2">
+              <path d="M3 21h18M3 10h18M5 10v11M9 10v11M15 10v11M19 10v11M12 3L2 10h20L12 3z"/>
+            </svg>
+          </div>
           <div class="money-info">
             <div class="money-title">Check bank balance</div>
             <div class="money-sub">Axis Bank · XX4521</div>
@@ -650,7 +708,11 @@
           <div class="money-arrow">›</div>
         </div>
         <div class="money-item" onclick="alert('UPI Lite is active! Pay up to ₹500 without entering PIN.')">
-          <div class="money-icon">⚡</div>
+          <div class="money-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="#1a73e8">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+          </div>
           <div class="money-info">
             <div class="money-title">UPI Lite</div>
             <div class="money-sub">Pin-free instant small payments</div>
@@ -660,27 +722,47 @@
       </div>
 
       <!-- Footer branding -->
-      <div class="gpay-footer-brand">
+      <div style="text-align:center;padding:24px 16px 36px;background:#f8f9fa;color:#5f6368;font-size:12px;">
         <div>Showing businesses based on your location</div>
         <div style="font-weight:500;margin-top:4px;color:#202124;">Google Pay · UPI</div>
       </div>
 
     </div>
+
+    <!-- Bottom Navigation -->
     <div class="bottom-nav">
-      <div class="nav-item active" onclick="go('home')"><div class="icon">🏠</div><span>Home</span></div>
-      <div class="nav-item" onclick="go('scan')"><div class="icon">📷</div><span>Scan</span></div>
-      <div class="nav-item" onclick="go('history')"><div class="icon">📋</div><span>History</span></div>
-      <div class="nav-item" onclick="go('profile')"><div class="icon">☰</div><span>More</span></div>
+      <div class="nav-item active" onclick="go('home')">
+        <svg class="icon-svg" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        <span>Home</span>
+      </div>
+      <div class="nav-item" onclick="go('scan')">
+        <svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 4h6v6H4zm10 0h6v6h-6zM4 14h6v6H4zm10 3h3v3h-3zm3-3h3v3h-3zm-3 0h3v3h-3zm0 3h3v3h-3z"/></svg>
+        <span>Scan</span>
+      </div>
+      <div class="nav-item" onclick="go('history')">
+        <svg class="icon-svg" viewBox="0 0 24 24"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 1 1 7 7 6.97 6.97 0 0 1-5-2.14l-1.42 1.42A8.92 8.92 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v6l5.25 3.15.75-1.23-4.5-2.67V8z"/></svg>
+        <span>History</span>
+      </div>
+      <div class="nav-item" onclick="go('profile')">
+        <svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+        <span>Account</span>
+      </div>
     </div>
   </div>
 
-  <!-- SCAN (real camera + QR image upload + demo scan) -->
+  <!-- SCAN SCREEN -->
   <div id="scan" class="screen">
     <div class="header">
       <button class="back-btn" onclick="stopScan();go('home')">←</button>
       <div class="header-title">Scan QR code</div>
       <div class="header-icons">
-        <label for="qrFileInput" style="cursor:pointer;font-size:18px;" title="Upload QR Image">🖼️</label>
+        <label for="qrFileInput" style="cursor:pointer;" title="Upload QR Image">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+        </label>
         <input type="file" id="qrFileInput" accept="image/*" style="display:none" onchange="handleQrUpload(this)">
       </div>
     </div>
@@ -702,7 +784,7 @@
     </div>
   </div>
 
-  <!-- PAY UPI -->
+  <!-- PAY UPI SCREEN -->
   <div id="payupi" class="screen">
     <div class="header">
       <button class="back-btn" onclick="go('home')">←</button>
@@ -713,15 +795,15 @@
         <div class="upi-label">Enter UPI ID or mobile number</div>
         <input type="text" class="upi-field" id="upiInput" placeholder="name@oksbi / 9876543210@ybl" autocomplete="off">
       </div>
-      <div class="upi-input-wrap" style="margin-top:12px;">
+      <div class="upi-input-wrap" style="margin-top:16px;">
         <div class="upi-label">Name (optional – auto from scan)</div>
         <input type="text" class="upi-field" id="nameInput" placeholder="Recipient name">
       </div>
-      <button class="pay-btn" style="margin-top:20px;" onclick="resolveUpi()">Continue</button>
+      <button class="pay-btn" style="margin-top:24px;" onclick="resolveUpi()">Continue</button>
     </div>
   </div>
 
-  <!-- AMOUNT -->
+  <!-- AMOUNT SCREEN -->
   <div id="amount" class="screen">
     <div class="header">
       <button class="back-btn" onclick="go('home')">←</button>
@@ -751,60 +833,63 @@
     </div>
   </div>
 
-  <!-- PROCESSING -->
+  <!-- PROCESS SCREEN -->
   <div id="process" class="screen">
     <div class="process-body">
       <div class="spinner"></div>
       <div class="process-text">Processing payment</div>
-      <div class="process-sub">Please wait while we complete your payment...</div>
+      <div class="process-sub">Securing transaction with UPI...</div>
     </div>
   </div>
 
-  <!-- SUCCESS – exact screenshot layout -->
+  <!-- SUCCESS SCREEN (EXACT GPAY MATCH) -->
   <div id="success" class="screen">
     <div class="success-screen">
       <div class="success-body">
         <div class="success-check">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12"></polyline>
           </svg>
         </div>
         <div class="success-amount" id="succAmount">₹250</div>
         <div class="success-to">Paid to <span id="succName">Karan Gupta</span></div>
-        <div class="success-name" id="succUpiLine">PhonePe · 9876543210@ybl</div>
+        <div class="success-name" id="succUpiLine">9876543210@ybl</div>
         <div class="success-meta">
-          <div class="date-line" id="succDate">7 Jan, 3:21 PM</div>
+          <div class="date-line" id="succDate">17 Sep, 6:21 PM</div>
           <div id="succUtr">UPI transaction ID: 189273980087</div>
         </div>
       </div>
       <div class="success-actions">
         <button class="success-btn outline" onclick="shareSuccess()">
-          <span style="font-size:15px;">↗</span> Share screenshot
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="2">
+            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/>
+          </svg>
+          Share screenshot
         </button>
         <button class="success-btn primary" onclick="go('home')">Done</button>
       </div>
       <div class="upi-logo-wrap">
         <div class="upi-powered">POWERED BY</div>
-        <svg width="72" height="28" viewBox="0 0 72 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <text x="0" y="20" font-family="Roboto,Arial,sans-serif" font-size="18" font-weight="700" fill="#097939">UPI</text>
-          <circle cx="52" cy="14" r="9" fill="#097939"/>
-          <path d="M48 14 L51 17 L57 10" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <svg width="78" height="26" viewBox="0 0 78 26" fill="none">
+          <text x="2" y="20" font-family="Google Sans, Roboto, Arial" font-size="20" font-weight="700" fill="#077e38">UPI</text>
+          <circle cx="56" cy="13" r="10" fill="#077e38"/>
+          <path d="M51 13 L55 17 L62 9" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
     </div>
   </div>
 
-  <!-- HISTORY -->
+  <!-- HISTORY SCREEN -->
   <div id="history" class="screen">
     <div class="header">
       <button class="back-btn" onclick="go('home')">←</button>
       <div class="header-title">Transaction history</div>
     </div>
     <div class="pay-body" style="padding-top:4px;">
-      <div class="tx-list" style="padding:0;">
+      <div class="tx-list">
         <div class="tx-item">
-          <div class="tx-avatar" style="background:#e8f0fe;color:#1a73e8">K</div>
-          <div class="tx-info"><h4>Paid to Karan Gupta</h4><p id="histDate1">Today · UPI</p></div>
+          <div class="tx-avatar">K</div>
+          <div class="tx-info"><h4>Paid to Karan Gupta</h4><p>Today · UPI</p></div>
           <div class="tx-amount debit">-₹250</div>
         </div>
         <div class="tx-item">
@@ -826,7 +911,7 @@
     </div>
   </div>
 
-  <!-- PROFILE -->
+  <!-- PROFILE / ACCOUNT -->
   <div id="profile" class="screen">
     <div class="header">
       <button class="back-btn" onclick="go('home')">←</button>
@@ -834,13 +919,13 @@
     </div>
     <div class="pay-body">
       <div class="recipient-card">
-        <div class="recipient-avatar" style="background:linear-gradient(135deg,#4285f4,#34a853);color:#fff;">K</div>
+        <div class="recipient-avatar" style="background:linear-gradient(135deg,#1a73e8,#34a853);color:#fff;">K</div>
         <div class="recipient-info">
           <h3>Kanha</h3>
           <p>kanha9002@okaxis</p>
         </div>
       </div>
-      <div style="font-size:14px;color:#5f6368;line-height:1.9;padding:4px 4px 0;">
+      <div style="font-size:14px;color:#5f6368;line-height:2.0;padding:4px 4px 0;">
         <p><strong style="color:#202124;">Balance</strong> · ₹1,00,000.00</p>
         <p><strong style="color:#202124;">Bank</strong> · Axis Bank · XX4521</p>
         <p><strong style="color:#202124;">UPI ID</strong> · kanha9002@okaxis</p>
@@ -849,7 +934,7 @@
     </div>
   </div>
 
-  <!-- BANK / SELF -->
+  <!-- BANK / SELF STUBS -->
   <div id="bank" class="screen">
     <div class="header">
       <button class="back-btn" onclick="go('home')">←</button>
@@ -872,37 +957,34 @@
       <button class="pay-btn" style="margin-top:28px;max-width:200px;" onclick="go('home')">Back to Home</button>
     </div>
   </div>
+
   <!-- BALANCE MODAL -->
   <div id="balanceModal" class="modal-overlay" onclick="if(event.target===this) hideBalanceModal()">
     <div class="modal-card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <h3 style="font-size:18px;font-weight:500;color:#202124;">Bank Balance</h3>
+        <h3 style="font-size:18px;font-weight:500;color:#202124;font-family:'Google Sans',sans-serif;">Bank Balance</h3>
         <button onclick="hideBalanceModal()" style="border:none;background:none;font-size:22px;color:#5f6368;cursor:pointer;">✕</button>
       </div>
       <div style="background:#f8f9fa;border:1px solid #e8eaed;border-radius:16px;padding:20px;text-align:center;">
         <div style="font-size:13px;color:#5f6368;margin-bottom:4px;">Axis Bank · XX4521</div>
-        <div style="font-size:34px;font-weight:500;color:#202124;letter-spacing:-0.5px;">₹1,00,000.00</div>
-        <div style="font-size:12px;color:#137333;margin-top:8px;font-weight:500;">✓ Account Active & Linked</div>
+        <div style="font-size:34px;font-weight:500;color:#202124;letter-spacing:-0.5px;font-family:'Google Sans',sans-serif;">₹1,00,000.00</div>
+        <div style="font-size:12px;color:#1e8e3e;margin-top:8px;font-weight:500;">✓ Account Active & Linked</div>
       </div>
       <button class="pay-btn" style="margin-top:20px;" onclick="hideBalanceModal()">Done</button>
     </div>
   </div>
 
 <script>
-  // ---- balance modal ----
-  function showBalanceModal() {
-    document.getElementById('balanceModal').classList.add('active');
-  }
-  function hideBalanceModal() {
-    document.getElementById('balanceModal').classList.remove('active');
-  }
+  // Balance modal
+  function showBalanceModal() { document.getElementById('balanceModal').classList.add('active'); }
+  function hideBalanceModal() { document.getElementById('balanceModal').classList.remove('active'); }
 
-  // ---- state ----
+  // State
   let currentRecipient = { name: 'Karan Gupta', upi: '9876543210@ybl', initial: 'K', app: 'PhonePe' };
   let html5QrCode = null;
   let scanRunning = false;
 
-  // ---- clock ----
+  // Clock
   function updateClock() {
     const now = new Date();
     document.getElementById('clock').textContent = now.toLocaleTimeString('en-IN', {
@@ -912,7 +994,7 @@
   updateClock();
   setInterval(updateClock, 20000);
 
-  // ---- navigation ----
+  // Navigation
   function go(id) {
     if (id !== 'scan') stopScan();
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -928,16 +1010,15 @@
     }).catch(() => {});
   }
 
-  // ---- pay helpers ----
+  // Payment Setup
   function startPay(name, upi, initial, app) {
     let finalName = (name || '').trim();
     let finalUpi = (upi || '').trim();
 
-    if (!finalName || finalName.toLowerCase() === 'default' || finalName.toLowerCase() === 'undefined' || finalName.toLowerCase() === 'null') {
+    if (!finalName || finalName.toLowerCase() === 'default' || finalName.toLowerCase() === 'undefined') {
       finalName = '';
     }
-
-    if (!finalUpi || finalUpi.toLowerCase() === 'default' || finalUpi.toLowerCase() === 'undefined' || finalUpi.toLowerCase() === 'null') {
+    if (!finalUpi || finalUpi.toLowerCase() === 'default' || finalUpi.toLowerCase() === 'undefined') {
       finalUpi = '';
     }
 
@@ -961,22 +1042,12 @@
       app: detectApp(finalUpi)
     };
 
-    // Update Recipient Card on Amount Screen
-    const recNameEl = document.getElementById('recName');
-    if (recNameEl) recNameEl.textContent = currentRecipient.name;
-    
-    const recUpiEl = document.getElementById('recUpi');
-    if (recUpiEl) recUpiEl.textContent = currentRecipient.upi;
-    
-    const recAvatarEl = document.getElementById('recAvatar');
-    if (recAvatarEl) recAvatarEl.textContent = currentRecipient.initial;
+    document.getElementById('recName').textContent = currentRecipient.name;
+    document.getElementById('recUpi').textContent = currentRecipient.upi;
+    document.getElementById('recAvatar').textContent = currentRecipient.initial;
 
-    // Update Success Screen elements in advance
-    const succNameEl = document.getElementById('succName');
-    if (succNameEl) succNameEl.textContent = currentRecipient.name;
-    
-    const succUpiEl = document.getElementById('succUpiLine');
-    if (succUpiEl) succUpiEl.textContent = currentRecipient.upi;
+    document.getElementById('succName').textContent = currentRecipient.name;
+    document.getElementById('succUpiLine').textContent = currentRecipient.upi;
 
     document.getElementById('amountInput').value = '';
     document.getElementById('noteInput').value = '';
@@ -1035,11 +1106,7 @@
     return `${day} ${mon}, ${h}:${m} ${ampm}`;
   }
 
-  // Fixed-style UTR (12 digits, looks real)
   function makeUtr() {
-    // Always same visual style as screenshot: 12-digit number
-    const base = '189273980087';
-    // slight variation so each payment feels unique but format identical
     let n = '';
     for (let i = 0; i < 12; i++) n += Math.floor(Math.random() * 10);
     return n;
@@ -1064,19 +1131,18 @@
     list.insertBefore(item, list.firstChild);
   }
 
+  // Audio & Speech Synthesis
   function playGPaySuccessSound() {
     try {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (!AudioCtx) return;
       const ctx = new AudioCtx();
-      
       const now = ctx.currentTime;
       
       const master = ctx.createGain();
       master.gain.setValueAtTime(0.35, now);
       master.connect(ctx.destination);
       
-      // Tone 1: E5 (659Hz)
       const osc1 = ctx.createOscillator();
       const g1 = ctx.createGain();
       osc1.type = 'sine';
@@ -1089,7 +1155,6 @@
       osc1.start(now);
       osc1.stop(now + 0.42);
       
-      // Tone 2: High E6 (1318Hz) GPay Chime
       const osc2 = ctx.createOscillator();
       const g2 = ctx.createGain();
       osc2.type = 'sine';
@@ -1101,29 +1166,32 @@
       g2.connect(master);
       osc2.start(now + 0.11);
       osc2.stop(now + 1.2);
+    } catch (e) {}
+  }
 
-      // Tone 3: B6 Crystal Overtone
-      const osc3 = ctx.createOscillator();
-      const g3 = ctx.createGain();
-      osc3.type = 'triangle';
-      osc3.frequency.setValueAtTime(1975.53, now + 0.11);
-      g3.gain.setValueAtTime(0.001, now + 0.11);
-      g3.gain.linearRampToValueAtTime(0.18, now + 0.14);
-      g3.gain.exponentialRampToValueAtTime(0.0001, now + 0.75);
-      osc3.connect(g3);
-      g3.connect(master);
-      osc3.start(now + 0.11);
-      osc3.stop(now + 0.8);
-    } catch (e) {
-      console.warn("Audio Context playback error:", e);
-    }
+  function speakGPayNotification(amount) {
+    try {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const text = `गूगल पे पर ${amount} रुपये प्राप्त हुए`;
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'hi-IN';
+        utterance.rate = 0.95;
+        utterance.pitch = 1.0;
+        
+        const voices = window.speechSynthesis.getVoices();
+        const hiVoice = voices.find(v => v.lang && (v.lang.includes('hi') || v.lang.includes('HI')));
+        if (hiVoice) utterance.voice = hiVoice;
+        
+        window.speechSynthesis.speak(utterance);
+      }
+    } catch (e) {}
   }
 
   function startPayment() {
     const amount = document.getElementById('amountInput').value || '0';
     const num = parseFloat(amount) || 0;
     
-    // Ensure clean real recipient details
     let recipientName = (currentRecipient.name || '').trim();
     let recipientUpi = (currentRecipient.upi || '').trim();
 
@@ -1134,35 +1202,33 @@
       recipientUpi = 'merchant@okaxis';
     }
     
-    // Set success screen elements immediately
     document.getElementById('succAmount').textContent = '₹' + num.toLocaleString('en-IN', { maximumFractionDigits: 2 });
     document.getElementById('succName').textContent = recipientName;
     document.getElementById('succUpiLine').textContent = recipientUpi;
     document.getElementById('succDate').textContent = formatNow();
     document.getElementById('succUtr').textContent = 'UPI transaction ID: ' + makeUtr();
     
-    // Dynamically add to Transaction History
     addTxToHistory(recipientName, recipientUpi, num);
 
     go('process');
     
     setTimeout(() => {
-      // Play GPay 1-second Payment Success Chime Sound!
       playGPaySuccessSound();
-
+      setTimeout(() => {
+        speakGPayNotification(num);
+      }, 500);
       go('success');
     }, 2100);
   }
 
   function shareSuccess() {
-    // just visual – no real share needed for demo
     const btn = event.currentTarget;
     const old = btn.innerHTML;
     btn.innerHTML = 'Shared ✓';
     setTimeout(() => { btn.innerHTML = old; }, 1200);
   }
 
-  // ---- EMVCo / BHARATQR / UPI QR PARSER ----
+  // QR Parsing
   function parseEmvCo(text) {
     let pa = '', pn = '', am = '';
     const idx = text.indexOf('000201');
@@ -1176,11 +1242,8 @@
         const val = payload.substring(pos + 4, pos + 4 + len);
         pos += 4 + len;
 
-        // Tag 59: Merchant Name
         if (tag === '59' && val) pn = val.trim();
-        // Tag 54: Amount
         if (tag === '54' && val) am = val.trim();
-        // Tag 26, 27, 51: VPA / UPI ID
         if (tag === '26' || tag === '27' || tag === '51') {
           const match = val.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9]+)/i);
           if (match) pa = match[1];
@@ -1194,7 +1257,6 @@
     let pa = '', pn = '', am = '';
     text = (text || '').trim();
 
-    // 0. Try JSON payload if string is JSON
     if (text.startsWith('{') && text.endsWith('}')) {
       try {
         const obj = JSON.parse(text);
@@ -1204,7 +1266,6 @@
       } catch (e) {}
     }
 
-    // 1. Try EMVCo / BharatQR TLV Parser if string contains 000201
     if (text.includes('000201')) {
       const emv = parseEmvCo(text);
       if (emv.pa) pa = emv.pa;
@@ -1212,7 +1273,6 @@
       if (emv.am) am = emv.am;
     }
 
-    // 2. Try URLSearchParams if text has query params (pa=, pn=, name=, etc.)
     if (text.includes('?')) {
       try {
         const qIndex = text.indexOf('?');
@@ -1225,35 +1285,29 @@
       } catch (e) {}
     }
 
-    // 3. Regex fallback for VPA / UPI ID (pa)
     if (!pa) {
       const paMatch = text.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9]+)/i);
       if (paMatch) pa = paMatch[1];
     }
 
-    // 4. Regex fallback for Name (pn / name / fn / org / mcn / biller)
     if (!pn) {
       const pnMatch = text.match(/(?:pn|name|fn|org|mcn|biller|merchantName)=([^&]+)/i);
       if (pnMatch) pn = pnMatch[1];
     }
 
-    // 5. Regex fallback for Amount (am / amount)
     if (!am) {
       const amMatch = text.match(/(?:am|amount)=([0-9.]+)/i);
       if (amMatch) am = amMatch[1];
     }
 
-    // Clean up URI escapes (%20, + into spaces)
     try { if (pn) pn = decodeURIComponent(pn.replace(/\+/g, ' ')).trim(); } catch (e) {}
     try { if (pa) pa = decodeURIComponent(pa.replace(/\+/g, ' ')).trim(); } catch (e) {}
     try { if (am) am = decodeURIComponent(am).trim(); } catch (e) {}
 
-    // Fallback if plain UPI ID string e.g. "9876543210@ybl"
     if (!pa && text.includes('@') && !text.includes('://')) {
       pa = text;
     }
 
-    // Format clean, beautiful display name from UPI handle if pn is missing
     if (!pn && pa) {
       const handle = pa.split('@')[0] || '';
       if (/^\d{10}$/.test(handle)) {
@@ -1275,8 +1329,6 @@
 
   function onScanSuccess(decodedText) {
     stopScan();
-    console.log("Scanned raw QR data:", decodedText);
-
     const data = parseUpiQr(decodedText);
     const initial = data.pn.charAt(0).toUpperCase();
 
@@ -1293,56 +1345,11 @@
     onScanSuccess("upi://pay?pa=supermart@okaxis&pn=SuperMart Store&am=250");
   }
 
-  function resizeImageFile(file, maxWidth, maxHeight, enhanceContrast = false) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => {
-        let width = img.width;
-        let height = img.height;
-        if (width > maxWidth || height > maxHeight) {
-          if (width > height) {
-            height = Math.round((height * maxWidth) / width);
-            width = maxWidth;
-          } else {
-            width = Math.round((width * maxHeight) / height);
-            height = maxHeight;
-          }
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-
-        if (enhanceContrast) {
-          const imgData = ctx.getImageData(0, 0, width, height);
-          const data = imgData.data;
-          for (let i = 0; i < data.length; i += 4) {
-            const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-            const v = avg > 120 ? 255 : 0;
-            data[i] = v;
-            data[i + 1] = v;
-            data[i + 2] = v;
-          }
-          ctx.putImageData(imgData, 0, 0);
-        }
-
-        canvas.toBlob((blob) => {
-          if (blob) resolve(blob);
-          else reject(new Error("Canvas blob failed"));
-        }, 'image/jpeg', 0.95);
-      };
-      img.onerror = (e) => reject(e);
-      img.src = URL.createObjectURL(file);
-    });
-  }
-
   function decodeQrWithJsQr(file) {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
         const maxDims = [Math.max(img.width, img.height), 1000, 700, 450];
-        
         for (const maxDim of maxDims) {
           const scale = maxDim / Math.max(img.width, img.height);
           const w = Math.round(img.width * scale);
@@ -1350,11 +1357,9 @@
           if (w <= 0 || h <= 0) continue;
           
           const canvas = document.createElement('canvas');
-          canvas.width = w;
-          canvas.height = h;
+          canvas.width = w; canvas.height = h;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, w, h);
-          
           const imgData = ctx.getImageData(0, 0, w, h);
           
           if (window.jsQR) {
@@ -1373,45 +1378,27 @@
   }
 
   async function readQrFromImageFile(file) {
-    // 1. jsQR Direct Canvas Reader (Zero WebWorker/CORS dependencies - Instant 100% pixel decoding)
     if (window.jsQR) {
       try {
         const text = await decodeQrWithJsQr(file);
-        if (text) {
-          console.log("jsQR canvas scan success:", text);
-          return text;
-        }
-      } catch (e) {
-        console.warn("jsQR canvas scan attempt:", e);
-      }
+        if (text) return text;
+      } catch (e) {}
     }
 
-    // 2. Native Browser BarcodeDetector (Chrome/Android WebView native C++ engine)
     if ('BarcodeDetector' in window) {
       try {
         const detector = new BarcodeDetector({ formats: ['qr_code'] });
         const img = await createImageBitmap(file);
         const barcodes = await detector.detect(img);
         if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
-          console.log("Native BarcodeDetector success:", barcodes[0].rawValue);
           return barcodes[0].rawValue;
         }
-      } catch (e) {
-        console.warn("Native BarcodeDetector attempt:", e);
-      }
+      } catch (e) {}
     }
 
-    // 3. Html5Qrcode fallback
     if (!html5QrCode) {
-      try {
-        html5QrCode = new Html5Qrcode("qr-reader");
-      } catch(e) {
-        const el = document.getElementById('qr-reader');
-        if (el) el.innerHTML = '';
-        html5QrCode = new Html5Qrcode("qr-reader");
-      }
+      try { html5QrCode = new Html5Qrcode("qr-reader"); } catch(e) {}
     }
-
     try {
       const text1 = await html5QrCode.scanFile(file, false);
       if (text1) return text1;
@@ -1423,18 +1410,12 @@
   async function handleQrUpload(input) {
     if (!input.files || input.files.length === 0) return;
     const file = input.files[0];
-    
-    // Stop active camera scan before file scan
-    if (scanRunning) {
-      stopScan();
-    }
+    if (scanRunning) stopScan();
 
     try {
       const decodedText = await readQrFromImageFile(file);
-      console.log("Image QR decoded text:", decodedText);
       onScanSuccess(decodedText);
     } catch (err) {
-      console.warn("All image QR decoding attempts failed:", err);
       const manualInput = prompt("Unable to auto-detect QR code from image quality. Please enter the UPI ID or Mobile Number manually (e.g. name@oksbi / 9876543210@ybl):");
       if (manualInput && manualInput.trim()) {
         onScanSuccess(manualInput.trim());
@@ -1448,12 +1429,9 @@
     const el = document.getElementById('qr-reader');
     if (!el) return;
 
-    // Safely stop and clear existing scanner instance before creating a new one
     if (html5QrCode) {
       try {
-        if (scanRunning) {
-          await html5QrCode.stop().catch(() => {});
-        }
+        if (scanRunning) await html5QrCode.stop().catch(() => {});
         await html5QrCode.clear().catch(() => {});
       } catch (e) {}
       html5QrCode = null;
@@ -1465,17 +1443,10 @@
     try {
       html5QrCode = new Html5Qrcode('qr-reader');
     } catch (err) {
-      console.warn("Instance creation warning, resetting element...", err);
       el.innerHTML = '';
-      try {
-        html5QrCode = new Html5Qrcode('qr-reader');
-      } catch (e2) {
-        showCameraFail();
-        return;
-      }
+      try { html5QrCode = new Html5Qrcode('qr-reader'); } catch (e2) { showCameraFail(); return; }
     }
 
-    // Dynamic Scanner Box sizing
     const qrboxFunction = function(viewfinderWidth, viewfinderHeight) {
       const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
       const edgeSize = Math.floor(minEdge * 0.75);
@@ -1483,10 +1454,7 @@
     };
 
     const config = { fps: 15, qrbox: qrboxFunction };
-
-    const onCamSuccess = () => {
-      scanRunning = true;
-    };
+    const onCamSuccess = () => { scanRunning = true; };
 
     function showCameraFail() {
       scanRunning = false;
@@ -1502,29 +1470,12 @@
         </div>`;
     }
 
-    // Start scanner with fallbacks
     html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, () => {})
       .then(onCamSuccess)
       .catch(() => {
-        // Fallback 1: front camera
         html5QrCode.start({ facingMode: "user" }, config, onScanSuccess, () => {})
           .then(onCamSuccess)
-          .catch(() => {
-            // Fallback 2: get camera ID
-            if (window.Html5Qrcode && Html5Qrcode.getCameras) {
-              Html5Qrcode.getCameras().then(cameras => {
-                if (cameras && cameras.length) {
-                  html5QrCode.start(cameras[0].id, config, onScanSuccess, () => {})
-                    .then(onCamSuccess)
-                    .catch(showCameraFail);
-                } else {
-                  showCameraFail();
-                }
-              }).catch(showCameraFail);
-            } else {
-              showCameraFail();
-            }
-          });
+          .catch(showCameraFail);
       });
   }
 
@@ -1539,15 +1490,6 @@
     }
   }
 
-  function toggleTorch() {
-    try {
-      if (html5QrCode && scanRunning) {
-        // Torch best effort
-      }
-    } catch (e) {}
-  }
-
-  // seed default on load
   document.getElementById('upiInput').value = '';
   document.getElementById('nameInput').value = '';
 </script>
