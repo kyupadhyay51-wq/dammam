@@ -1011,16 +1011,45 @@
     return n;
   }
 
+  function addTxToHistory(name, upi, amount) {
+    const list = document.querySelector('#history .tx-list');
+    if (!list) return;
+    const initial = (name || 'U').charAt(0).toUpperCase();
+    const formattedAmount = '-₹' + amount.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    
+    const item = document.createElement('div');
+    item.className = 'tx-item';
+    item.innerHTML = `
+      <div class="tx-avatar" style="background:#e8f0fe;color:#1a73e8">${initial}</div>
+      <div class="tx-info">
+        <h4>Paid to ${name}</h4>
+        <p>Just now · ${upi}</p>
+      </div>
+      <div class="tx-amount debit">${formattedAmount}</div>
+    `;
+    list.insertBefore(item, list.firstChild);
+  }
+
   function startPayment() {
     const amount = document.getElementById('amountInput').value || '0';
     const num = parseFloat(amount) || 0;
+    
+    // Ensure clean real recipient details
+    const recipientName = currentRecipient.name || 'UPI Merchant';
+    const recipientUpi = currentRecipient.upi || 'merchant@upi';
+    
     go('process');
+    
     setTimeout(() => {
       document.getElementById('succAmount').textContent = '₹' + num.toLocaleString('en-IN', { maximumFractionDigits: 2 });
-      document.getElementById('succName').textContent = currentRecipient.name;
-      document.getElementById('succUpiLine').textContent = currentRecipient.app + ' · ' + currentRecipient.upi;
+      document.getElementById('succName').textContent = recipientName;
+      document.getElementById('succUpiLine').textContent = recipientUpi;
       document.getElementById('succDate').textContent = formatNow();
       document.getElementById('succUtr').textContent = 'UPI transaction ID: ' + makeUtr();
+      
+      // Dynamically add to Transaction History
+      addTxToHistory(recipientName, recipientUpi, num);
+
       go('success');
     }, 2100);
   }
