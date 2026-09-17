@@ -820,37 +820,78 @@
     setTimeout(() => { btn.innerHTML = old; }, 1200);
   }
 
-  // ---- REAL QR SCAN ----
+  // ---- REAL QR SCAN PARSER ----
+  function parseUpiQr(text) {
+    let pa = '', pn = '', am = '';
+    text = (text || '').trim();
+
+    // 1. Try URLSearchParams if text has query params (pa=, pn=, etc.)
+    if (text.includes('pa=') || text.includes('pn=') || text.includes('am=')) {
+      const qIndex = text.indexOf('?');
+      const queryString = qIndex !== -1 ? text.substring(qIndex + 1) : text;
+      const params = new URLSearchParams(queryString);
+
+      pa = params.get('pa') || params.get('PA') || '';
+      pn = params.get('pn') || params.get('PN') || '';
+      am = params.get('am') || params.get('AM') || '';
+    }
+
+    // 2. Regex fallback for UPI ID (pa)
+    if (!pa) {
+      const paMatch = text.match(/(?:pa=)?([a-zA-Z0-9._-]+@[a-zA-Z0-9]+)/i);
+      if (paMatch) pa = paMatch[1];
+    }
+
+    // 3. Regex fallback for Name (pn)
+    if (!pn) {
+      const pnMatch = text.match(/pn=([^&]+)/i);
+      if (pnMatch) pn = pnMatch[1];
+    }
+
+    // 4. Regex fallback for Amount (am)
+    if (!am) {
+      const amMatch = text.match(/am=([0-9.]+)/i);
+      if (amMatch) am = amMatch[1];
+    }
+
+    // Clean up URI components (%20, + into spaces)
+    try { if (pn) pn = decodeURIComponent(pn.replace(/\+/g, ' ')); } catch (e) {}
+    try { if (pa) pa = decodeURIComponent(pa.replace(/\+/g, ' ')); } catch (e) {}
+    try { if (am) am = decodeURIComponent(am); } catch (e) {}
+
+    // Fallback if plain UPI ID e.g. "9876543210@ybl"
+    if (!pa && text.includes('@') && !text.includes('://')) {
+      pa = text;
+    }
+
+    // Derive readable display name if missing
+    if (!pn && pa) {
+      const handle = pa.split('@')[0] || '';
+      if (/^\d{10}$/.test(handle)) {
+        pn = 'Merchant (' + handle + ')';
+      } else {
+        pn = handle.replace(/[._0-9]/g, ' ').replace(/\s+/g, ' ').trim();
+        pn = pn.replace(/\b\w/g, c => c.toUpperCase()) || 'Merchant';
+      }
+    }
+
+    if (!pn) pn = 'UPI Merchant';
+    if (!pa) pa = 'scanned.merchant@okaxis';
+
+    return { pa, pn, am };
+  }
+
   function onScanSuccess(decodedText) {
     stopScan();
-    // Parse UPI QR: upi://pay?pa=xxx@ybl&pn=Name&am=...
-    let upi = '', name = '', amount = '';
-    try {
-      if (decodedText.toLowerCase().startsWith('upi://')) {
-        const u = new URL(decodedText);
-        upi = u.searchParams.get('pa') || '';
-        name = u.searchParams.get('pn') || '';
-        amount = u.searchParams.get('am') || '';
-      } else if (decodedText.includes('@')) {
-        // plain UPI id
-        upi = decodedText.trim();
-      } else {
-        // fallback: treat whole string as upi-ish
-        upi = decodedText.trim();
-      }
-    } catch (e) {
-      upi = decodedText.trim();
-    }
-    if (!name && upi) {
-      const part = upi.split('@')[0] || 'User';
-      name = part.replace(/[._0-9]/g, ' ').replace(/\s+/g, ' ').trim();
-      name = name.replace(/\b\w/g, c => c.toUpperCase()) || 'Merchant';
-    }
-    if (!name) name = 'Merchant';
-    const initial = name.charAt(0).toUpperCase();
-    startPay(name, upi || 'scanned@upi', initial, detectApp(upi));
-    if (amount && parseFloat(amount) > 0) {
-      document.getElementById('amountInput').value = amount;
+    console.log("Scanned raw QR data:", decodedText);
+
+    const data = parseUpiQr(decodedText);
+    const initial = data.pn.charAt(0).toUpperCase();
+
+    startPay(data.pn, data.pa, initial, detectApp(data.pa));
+
+    if (data.am && parseFloat(data.am) > 0) {
+      document.getElementById('amountInput').value = data.am;
       checkAmount();
     }
   }
@@ -871,9 +912,8 @@
         onScanSuccess(decodedText);
       })
       .catch(err => {
-        console.warn("QR file scan failed, using fallback reader", err);
-        // Fallback demo scan if unreadable image
-        onScanSuccess("upi://pay?pa=scanned.qr@okaxis&pn=QR Merchant&am=100");
+        console.warn("QR file scan failed:", err);
+        alert("Unable to read QR code from image. Please make sure the QR code is clear and try again.");
       });
   }
 
@@ -929,11 +969,13 @@
   }
 
   function stopScan() {
-    if (html5QrCode && scanRunning) {
-      html5QrCode.stop().then(() => {
-        scanRunning = false;
-        html5QrCode.clear();
-      }).catch(() => { scanRunning = false; });
+    scanRunning = false;
+    if (html5QrCode) {
+      try {
+        html5QrCode.stop().then(() => {
+          try { html5QrCode.clear(); } catch(e){}
+        }).catch(() => {});
+      } catch (e) {}
     }
   }
 
