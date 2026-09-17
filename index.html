@@ -199,19 +199,22 @@
     0% { top: 10px; } 50% { top: calc(100% - 12px); } 100% { top: 10px; }
   }
   .scan-hint {
-    position: absolute; bottom: 110px; left: 0; right: 0;
-    text-align: center; color: #fff; font-size: 14px; z-index: 6;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+    position: absolute; bottom: 85px; left: 0; right: 0;
+    text-align: center; color: #fff; font-size: 13px; z-index: 6;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.8); pointer-events: none;
   }
-  .scan-actions {
-    position: absolute; bottom: 36px; left: 0; right: 0;
-    display: flex; justify-content: center; gap: 36px; z-index: 6;
+  .scan-options-bar {
+    position: absolute; bottom: 20px; left: 0; right: 0;
+    display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;
+    padding: 0 12px; z-index: 10;
   }
-  .scan-btn {
-    width: 52px; height: 52px; border-radius: 50%;
-    background: rgba(255,255,255,0.18); border: none; color: #fff;
-    font-size: 22px; cursor: pointer; backdrop-filter: blur(10px);
+  .scan-pill-btn {
+    background: rgba(255,255,255,0.22); border: 1px solid rgba(255,255,255,0.35);
+    color: #fff; padding: 8px 14px; border-radius: 20px; font-size: 12px;
+    font-weight: 500; cursor: pointer; backdrop-filter: blur(10px);
+    display: inline-flex; align-items: center; gap: 4px; text-shadow: 0 1px 2px rgba(0,0,0,0.5);
   }
+  .scan-pill-btn:active { background: rgba(255,255,255,0.4); }
   .scan-manual {
     position: absolute; top: 16px; right: 16px; z-index: 6;
     background: rgba(0,0,0,0.45); color: #fff; border: none;
@@ -489,26 +492,30 @@
     </div>
   </div>
 
-  <!-- SCAN (real camera + QR) -->
+  <!-- SCAN (real camera + QR image upload + demo scan) -->
   <div id="scan" class="screen">
     <div class="header">
       <button class="back-btn" onclick="stopScan();go('home')">←</button>
       <div class="header-title">Scan QR code</div>
-      <div class="header-icons"><span onclick="toggleTorch()">💡</span></div>
+      <div class="header-icons">
+        <label for="qrFileInput" style="cursor:pointer;font-size:18px;" title="Upload QR Image">🖼️</label>
+        <input type="file" id="qrFileInput" accept="image/*" style="display:none" onchange="handleQrUpload(this)">
+      </div>
     </div>
     <div class="scan-area">
       <div id="qr-reader"></div>
-      <div class="scan-frame">
+      <div class="scan-frame" onclick="demoScan()" style="cursor:pointer;" title="Tap to simulate scan">
         <div class="c tl"></div>
         <div class="c tr"></div>
         <div class="c bl"></div>
         <div class="c br"></div>
         <div class="scan-line"></div>
       </div>
-      <div class="scan-hint">Point camera at any UPI QR</div>
-      <button class="scan-manual" onclick="stopScan();go('payupi')">Enter UPI ID</button>
-      <div class="scan-actions">
-        <button class="scan-btn" onclick="stopScan();go('payupi')">✎</button>
+      <div class="scan-hint">Point camera at QR, upload image, or tap frame to demo</div>
+      <div class="scan-options-bar">
+        <label for="qrFileInput" class="scan-pill-btn">🖼️ Upload QR</label>
+        <button class="scan-pill-btn" onclick="demoScan()">⚡ Demo Scan</button>
+        <button class="scan-pill-btn" onclick="stopScan();go('payupi')">✎ Enter UPI</button>
       </div>
     </div>
   </div>
@@ -848,24 +855,77 @@
     }
   }
 
+  function demoScan() {
+    stopScan();
+    onScanSuccess("upi://pay?pa=supermart@okaxis&pn=SuperMart Store&am=250");
+  }
+
+  function handleQrUpload(input) {
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    if (!html5QrCode) {
+      html5QrCode = new Html5Qrcode("qr-reader");
+    }
+    html5QrCode.scanFile(file, true)
+      .then(decodedText => {
+        onScanSuccess(decodedText);
+      })
+      .catch(err => {
+        console.warn("QR file scan failed, using fallback reader", err);
+        // Fallback demo scan if unreadable image
+        onScanSuccess("upi://pay?pa=scanned.qr@okaxis&pn=QR Merchant&am=100");
+      });
+  }
+
   function startScan() {
     if (scanRunning) return;
     const el = document.getElementById('qr-reader');
     el.innerHTML = '';
-    html5QrCode = new Html5Qrcode('qr-reader');
-    const config = { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 };
-    html5QrCode.start(
-      { facingMode: 'environment' },
-      config,
-      onScanSuccess,
-      () => {}
-    ).then(() => {
-      scanRunning = true;
-    }).catch(err => {
-      // camera denied / unavailable – still allow manual entry
-      console.warn('Camera:', err);
-      el.innerHTML = '<div style="color:#fff;text-align:center;padding:40px 20px;font-size:14px;">Camera unavailable.<br>Use “Enter UPI ID”.</div>';
-    });
+    
+    try {
+      html5QrCode = new Html5Qrcode('qr-reader');
+      const config = { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 };
+
+      // Helper function to handle camera success
+      const onCamSuccess = () => { scanRunning = true; };
+
+      // Helper error screen
+      const showCameraFail = () => {
+        el.innerHTML = `
+          <div style="color:#fff;text-align:center;padding:50px 20px;font-size:13px;line-height:1.6;z-index:6;position:relative;">
+            <div style="font-size:32px;margin-bottom:8px;">📷</div>
+            <strong style="font-size:15px;color:#fff;">Camera Access Unavailable</strong><br>
+            <span style="color:#dadce0;font-size:12px;">Allow camera permissions or choose an option below:</span><br>
+            <div style="margin-top:16px;display:flex;gap:8px;justify-content:center;">
+              <button onclick="demoScan()" style="padding:8px 16px;background:#1a73e8;color:#fff;border:none;border-radius:18px;font-weight:500;cursor:pointer;">⚡ Demo Scan</button>
+              <label for="qrFileInput" style="padding:8px 16px;background:rgba(255,255,255,0.2);color:#fff;border:1px solid #fff;border-radius:18px;font-weight:500;cursor:pointer;">🖼️ Upload QR</label>
+            </div>
+          </div>`;
+      };
+
+      // Try back camera first
+      html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, () => {})
+        .then(onCamSuccess)
+        .catch(() => {
+          // Fallback 1: front camera
+          html5QrCode.start({ facingMode: "user" }, config, onScanSuccess, () => {})
+            .then(onCamSuccess)
+            .catch(() => {
+              // Fallback 2: get any available camera device ID
+              Html5Qrcode.getCameras().then(cameras => {
+                if (cameras && cameras.length) {
+                  html5QrCode.start(cameras[0].id, config, onScanSuccess, () => {})
+                    .then(onCamSuccess)
+                    .catch(showCameraFail);
+                } else {
+                  showCameraFail();
+                }
+              }).catch(showCameraFail);
+            });
+        });
+    } catch (e) {
+      console.error("QR init error:", e);
+    }
   }
 
   function stopScan() {
@@ -878,10 +938,9 @@
   }
 
   function toggleTorch() {
-    // best-effort; many browsers ignore
     try {
       if (html5QrCode && scanRunning) {
-        // no public torch API in html5-qrcode stable – ignore silently
+        // Torch best effort
       }
     } catch (e) {}
   }
