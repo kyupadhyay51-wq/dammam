@@ -50,89 +50,162 @@
   }
   .screen.active { display: flex; }
 
-  /* ===== HOME ===== */
-  .home-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 72px; }
-  .home-top {
-    background: linear-gradient(180deg, #e8f0fe 0%, #ffffff 70%);
-    padding: 16px 16px 20px;
+  /* ===== HOME (EXACT GPAY UI) ===== */
+  .home-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 72px; background: #fff; }
+  
+  .gpay-search-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px; background: #fff; position: sticky; top: 0; z-index: 10;
   }
-  .profile-row { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
-  .avatar {
-    width: 46px; height: 46px; border-radius: 50%;
+  .gpay-search-pill {
+    flex: 1; height: 46px; background: #f1f3f4; border-radius: 23px;
+    display: flex; align-items: center; padding: 0 16px; gap: 12px;
+    color: #5f6368; font-size: 14px; cursor: pointer; border: 1px solid #e8eaed;
+  }
+  .gpay-search-pill span { flex: 1; font-weight: 400; color: #5f6368; }
+  .gpay-avatar {
+    width: 38px; height: 38px; border-radius: 50%;
     background: linear-gradient(135deg, #4285f4, #34a853);
-    color: #fff; font-weight: 500; font-size: 18px;
-    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 500; font-size: 16px;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    box-shadow: 0 1px 3px rgba(60,64,67,0.2);
   }
-  .profile-info h2 { font-size: 16px; font-weight: 500; color: #202124; }
-  .profile-info p { font-size: 13px; color: #5f6368; margin-top: 1px; }
-  .balance-card {
-    background: #fff;
-    border-radius: 16px;
-    padding: 18px 18px 14px;
-    box-shadow: 0 1px 2px rgba(60,64,67,.08), 0 2px 8px rgba(60,64,67,.06);
+
+  .gpay-hero {
+    background: linear-gradient(180deg, #e8f0fe 0%, #ffffff 100%);
+    padding: 12px 16px 16px; text-align: center;
+  }
+  .gpay-brand-logo {
+    display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 8px;
+  }
+  .gpay-brand-logo span {
+    font-family: 'Google Sans', sans-serif; font-size: 22px; font-weight: 700; color: #1a73e8; letter-spacing: -0.5px;
+  }
+  .gpay-upi-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #fff; border: 1px solid #dadce0; padding: 6px 14px;
+    border-radius: 16px; font-size: 12px; color: #5f6368;
+    box-shadow: 0 1px 3px rgba(60,64,67,0.08);
+  }
+  .gpay-upi-badge strong { color: #202124; font-weight: 500; }
+
+  /* 8 Quick Action Items Grid (2x4) */
+  .quick-grid-8 {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 16px 8px; padding: 16px 12px 16px; background: #fff;
+  }
+  .grid-action-item {
+    display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer;
+  }
+  .grid-action-icon {
+    width: 50px; height: 50px; border-radius: 16px;
+    background: #e8f0fe; color: #1a73e8; font-size: 20px;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.15s ease, background-color 0.15s ease;
+  }
+  .grid-action-item:active .grid-action-icon { transform: scale(0.92); background: #d2e3fc; }
+  .grid-action-label {
+    font-size: 11px; color: #202124; text-align: center; line-height: 1.25; font-weight: 400;
+  }
+
+  /* Section Title styling */
+  .gpay-section-header {
+    display: flex; justify-space-between; align-items: center;
+    padding: 20px 16px 12px;
+  }
+  .gpay-section-title {
+    font-size: 16px; font-weight: 500; color: #202124; letter-spacing: -0.2px;
+  }
+  .gpay-section-more {
+    font-size: 13px; font-weight: 500; color: #1a73e8; cursor: pointer;
+  }
+
+  /* Grid 4 columns for People / Businesses */
+  .people-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px 8px; padding: 0 12px 12px;
+  }
+  .person-card {
+    display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer;
+  }
+  .person-circle {
+    width: 52px; height: 52px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 500; color: #fff;
+    box-shadow: 0 1px 3px rgba(60,64,67,0.12);
+  }
+  .person-circle.blue { background: #4285f4; }
+  .person-circle.red { background: #ea4335; }
+  .person-circle.yellow { background: #fbbc04; color: #202124; }
+  .person-circle.green { background: #34a853; }
+  .person-circle.purple { background: #9c27b0; }
+  .person-circle.orange { background: #ff9800; }
+  .person-circle.teal { background: #009688; }
+  .person-circle.add { background: #e8f0fe; color: #1a73e8; border: 1.5px dashed #1a73e8; font-size: 22px; }
+  .person-name-text {
+    font-size: 11px; color: #202124; max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center;
+  }
+
+  /* Businesses & Bills */
+  .biz-circle {
+    width: 50px; height: 50px; border-radius: 50%;
+    background: #f8f9fa; border: 1px solid #e8eaed;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 700; color: #202124;
+  }
+
+  /* Promo Cards (Rewards & Offers) */
+  .promo-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 8px; padding: 0 12px 16px;
+  }
+  .promo-item {
+    display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer;
+  }
+  .promo-icon {
+    width: 52px; height: 52px; border-radius: 16px;
+    display: flex; align-items: center; justify-content: center; font-size: 22px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06); position: relative; background: #f8f9fa;
     border: 1px solid #e8eaed;
   }
-  .balance-label { font-size: 13px; color: #5f6368; margin-bottom: 2px; }
-  .balance-amount { font-size: 30px; font-weight: 500; letter-spacing: -0.6px; color: #202124; }
-  .balance-amount span { font-size: 20px; color: #5f6368; font-weight: 400; }
-  .upi-row {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f3f4;
-  }
-  .upi-id { font-size: 13px; color: #5f6368; }
-  .upi-id strong { color: #202124; font-weight: 500; }
-  .copy-upi {
-    font-size: 12px; color: #1a73e8; background: none; border: none;
-    font-weight: 500; cursor: pointer; padding: 4px 0;
+  .promo-badge {
+    position: absolute; top: -5px; right: -5px;
+    background: #ea4335; color: #fff; font-size: 8px; font-weight: 700;
+    padding: 2px 5px; border-radius: 10px; text-transform: uppercase;
   }
 
-  .quick-actions {
-    display: grid; grid-template-columns: repeat(4, 1fr);
-    gap: 12px; padding: 22px 16px 8px;
+  /* Manage Money List (Real GPay list) */
+  .money-list { padding: 8px 16px 24px; border-top: 1px solid #f1f3f4; margin-top: 8px; }
+  .money-item {
+    display: flex; align-items: center; gap: 16px; padding: 14px 0;
+    border-bottom: 1px solid #f1f3f4; cursor: pointer;
   }
-  .action-item { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
-  .action-icon {
-    width: 54px; height: 54px; border-radius: 16px;
-    background: #e8f0fe; color: #1a73e8;
-    display: flex; align-items: center; justify-content: center; font-size: 22px;
-  }
-  .action-item span { font-size: 11px; color: #5f6368; text-align: center; line-height: 1.25; }
-
-  .section { padding: 16px 16px 8px; }
-  .section-title {
-    font-size: 12px; font-weight: 500; color: #5f6368;
-    text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 12px;
-  }
-  .people-row { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 6px; }
-  .people-row::-webkit-scrollbar { display: none; }
-  .person { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 60px; cursor: pointer; }
-  .person-avatar {
-    width: 50px; height: 50px; border-radius: 50%;
-    background: #f1f3f4; color: #5f6368;
+  .money-item:active { background: #f8f9fa; }
+  .money-icon {
+    width: 24px; height: 24px; color: #1a73e8; font-size: 20px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 17px; font-weight: 500; border: 2px solid #e8eaed;
   }
-  .person-avatar.blue { background: #e8f0fe; color: #1a73e8; border-color: #d2e3fc; }
-  .person-avatar.green { background: #e6f4ea; color: #137333; border-color: #ceead6; }
-  .person-name { font-size: 11px; color: #202124; max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
+  .money-info { flex: 1; }
+  .money-title { font-size: 14px; font-weight: 500; color: #202124; }
+  .money-sub { font-size: 12px; color: #5f6368; margin-top: 2px; }
+  .money-arrow { color: #5f6368; font-size: 16px; }
 
-  .tx-list { padding: 0 16px 20px; }
-  .tx-item {
-    display: flex; align-items: center; gap: 12px;
-    padding: 13px 0; border-bottom: 1px solid #f1f3f4;
+  /* GPay Footer */
+  .gpay-footer-brand {
+    text-align: center; padding: 24px 16px 36px; background: #f8f9fa; color: #5f6368; font-size: 12px;
   }
-  .tx-avatar {
-    width: 40px; height: 40px; border-radius: 50%;
-    background: #f1f3f4; color: #5f6368;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 14px; font-weight: 500; flex-shrink: 0;
+
+  /* Balance Modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    z-index: 1000; align-items: flex-end; justify-content: center;
+    backdrop-filter: blur(2px);
   }
-  .tx-info { flex: 1; min-width: 0; }
-  .tx-info h4 { font-size: 14px; font-weight: 500; color: #202124; }
-  .tx-info p { font-size: 12px; color: #5f6368; margin-top: 2px; }
-  .tx-amount { font-size: 14px; font-weight: 500; white-space: nowrap; }
-  .tx-amount.credit { color: #137333; }
-  .tx-amount.debit { color: #202124; }
+  .modal-overlay.active { display: flex; }
+  .modal-card {
+    width: 100%; max-width: 420px; background: #fff;
+    border-radius: 24px 24px 0 0; padding: 24px 20px 32px;
+    animation: slideUp 0.25s cubic-bezier(0,0,0.2,1);
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
   .bottom-nav {
     position: absolute; bottom: 0; left: 0; right: 0;
@@ -400,89 +473,197 @@
     </div>
   </div>
 
-  <!-- HOME -->
+  <!-- HOME (REAL GPAY LAYOUT) -->
   <div id="home" class="screen active">
     <div class="home-scroll">
-      <div class="home-top">
-        <div class="profile-row">
-          <div class="avatar">K</div>
-          <div class="profile-info">
-            <h2>Kanha</h2>
-            <p>@kanha9002</p>
-          </div>
+      
+      <!-- Top Search Bar -->
+      <div class="gpay-search-row">
+        <div class="gpay-search-pill" onclick="go('payupi')">
+          <span>🔍</span>
+          <span>Pay anyone on UPI</span>
         </div>
-        <div class="balance-card">
-          <div class="balance-label">Available balance</div>
-          <div class="balance-amount"><span>₹</span>1,00,000.00</div>
-          <div class="upi-row">
-            <div class="upi-id">UPI ID: <strong>kanha9002@okaxis</strong></div>
-            <button class="copy-upi" onclick="copyUpi()">Copy</button>
-          </div>
+        <div class="gpay-avatar" onclick="go('profile')">K</div>
+      </div>
+
+      <!-- Hero Header & UPI ID -->
+      <div class="gpay-hero">
+        <div class="gpay-brand-logo">
+          <span>Google Pay</span>
+        </div>
+        <div class="gpay-upi-badge">
+          <span>UPI ID: <strong>kanha9002@okaxis</strong></span>
+          <button class="copy-upi" onclick="copyUpi()">Copy</button>
         </div>
       </div>
-      <div class="quick-actions">
-        <div class="action-item" onclick="go('scan')">
-          <div class="action-icon">📷</div>
-          <span>Scan any<br>QR code</span>
+
+      <!-- 8 Core Actions Grid (2 rows x 4 cols) -->
+      <div class="quick-grid-8">
+        <div class="grid-action-item" onclick="go('scan')">
+          <div class="grid-action-icon">📷</div>
+          <span class="grid-action-label">Scan any<br>QR code</span>
         </div>
-        <div class="action-item" onclick="go('payupi')">
-          <div class="action-icon">↑</div>
-          <span>Pay</span>
+        <div class="grid-action-item" onclick="go('payupi')">
+          <div class="grid-action-icon">👤</div>
+          <span class="grid-action-label">Pay<br>contacts</span>
         </div>
-        <div class="action-item" onclick="go('bank')">
-          <div class="action-icon">🏦</div>
-          <span>Bank<br>transfer</span>
+        <div class="grid-action-item" onclick="go('payupi')">
+          <div class="grid-action-icon">📱</div>
+          <span class="grid-action-label">Pay phone<br>number</span>
         </div>
-        <div class="action-item" onclick="go('self')">
-          <div class="action-icon">👤</div>
-          <span>Self<br>transfer</span>
+        <div class="grid-action-item" onclick="go('bank')">
+          <div class="grid-action-icon">🏦</div>
+          <span class="grid-action-label">Bank<br>transfer</span>
         </div>
-      </div>
-      <div class="section">
-        <div class="section-title">People</div>
-        <div class="people-row">
-          <div class="person" onclick="startPay('Karan Gupta','9876543210@ybl','K')">
-            <div class="person-avatar blue">K</div>
-            <div class="person-name">Karan</div>
-          </div>
-          <div class="person" onclick="startPay('Rahul Sharma','rahul.sharma@oksbi','R')">
-            <div class="person-avatar green">R</div>
-            <div class="person-name">Rahul</div>
-          </div>
-          <div class="person" onclick="startPay('Priya Mehta','priya.m@okhdfcbank','P')">
-            <div class="person-avatar">P</div>
-            <div class="person-name">Priya</div>
-          </div>
-          <div class="person" onclick="startPay('Amit Kumar','amit.k@okicici','A')">
-            <div class="person-avatar blue">A</div>
-            <div class="person-name">Amit</div>
-          </div>
-          <div class="person" onclick="go('payupi')">
-            <div class="person-avatar">+</div>
-            <div class="person-name">New</div>
-          </div>
+        <div class="grid-action-item" onclick="go('payupi')">
+          <div class="grid-action-icon">✉️</div>
+          <span class="grid-action-label">Pay UPI ID<br>or number</span>
+        </div>
+        <div class="grid-action-item" onclick="go('self')">
+          <div class="grid-action-icon">🔄</div>
+          <span class="grid-action-label">Self<br>transfer</span>
+        </div>
+        <div class="grid-action-item" onclick="go('payupi')">
+          <div class="grid-action-icon">📄</div>
+          <span class="grid-action-label">Pay<br>bills</span>
+        </div>
+        <div class="grid-action-item" onclick="go('payupi')">
+          <div class="grid-action-icon">📲</div>
+          <span class="grid-action-label">Mobile<br>recharge</span>
         </div>
       </div>
-      <div class="section">
-        <div class="section-title">Recent</div>
+
+      <!-- People Section -->
+      <div class="gpay-section-header">
+        <div class="gpay-section-title">People</div>
       </div>
-      <div class="tx-list">
-        <div class="tx-item">
-          <div class="tx-avatar" style="background:#e8f0fe;color:#1a73e8">K</div>
-          <div class="tx-info"><h4>Paid to Karan Gupta</h4><p>Today · UPI</p></div>
-          <div class="tx-amount debit">-₹250</div>
+      <div class="people-grid">
+        <div class="person-card" onclick="startPay('Karan Gupta','9876543210@ybl','K')">
+          <div class="person-circle blue">K</div>
+          <span class="person-name-text">Karan</span>
         </div>
-        <div class="tx-item">
-          <div class="tx-avatar" style="background:#e6f4ea;color:#137333">↓</div>
-          <div class="tx-info"><h4>Received from Priya</h4><p>Yesterday · UPI</p></div>
-          <div class="tx-amount credit">+₹1,200</div>
+        <div class="person-card" onclick="startPay('Rahul Sharma','rahul.sharma@oksbi','R')">
+          <div class="person-circle red">R</div>
+          <span class="person-name-text">Rahul</span>
         </div>
-        <div class="tx-item">
-          <div class="tx-avatar">R</div>
-          <div class="tx-info"><h4>Paid to Rahul</h4><p>12 Sep · UPI</p></div>
-          <div class="tx-amount debit">-₹500</div>
+        <div class="person-card" onclick="startPay('Priya Mehta','priya.m@okhdfcbank','P')">
+          <div class="person-circle yellow">P</div>
+          <span class="person-name-text">Priya</span>
+        </div>
+        <div class="person-card" onclick="startPay('Amit Kumar','amit.k@okicici','A')">
+          <div class="person-circle green">A</div>
+          <span class="person-name-text">Amit</span>
+        </div>
+        <div class="person-card" onclick="startPay('Sunita Roy','sunita.roy@okaxis','S')">
+          <div class="person-circle purple">S</div>
+          <span class="person-name-text">Sunita</span>
+        </div>
+        <div class="person-card" onclick="startPay('Vikram Singh','vikram@ybl','V')">
+          <div class="person-circle orange">V</div>
+          <span class="person-name-text">Vikram</span>
+        </div>
+        <div class="person-card" onclick="startPay('Deepak Verma','deepak@paytm','D')">
+          <div class="person-circle teal">D</div>
+          <span class="person-name-text">Deepak</span>
+        </div>
+        <div class="person-card" onclick="go('payupi')">
+          <div class="person-circle add">+</div>
+          <span class="person-name-text">New</span>
         </div>
       </div>
+
+      <!-- Businesses Section -->
+      <div class="gpay-section-header">
+        <div class="gpay-section-title">Businesses</div>
+        <div class="gpay-section-more" onclick="go('payupi')">Explore ›</div>
+      </div>
+      <div class="people-grid">
+        <div class="person-card" onclick="startPay('Jio Prepaid','jio.biller@okaxis','J','Jio')">
+          <div class="biz-circle" style="background:#e8f0fe;color:#1a73e8;">Jio</div>
+          <span class="person-name-text">Jio</span>
+        </div>
+        <div class="person-card" onclick="startPay('Airtel Postpaid','airtel.biller@oksbi','A','Airtel')">
+          <div class="biz-circle" style="background:#fce8e6;color:#d93025;">airtel</div>
+          <span class="person-name-text">Airtel</span>
+        </div>
+        <div class="person-card" onclick="startPay('BESCOM Electricity','bescom@okhdfcbank','B','BESCOM')">
+          <div class="biz-circle" style="background:#fef7e0;color:#f2990a;">⚡</div>
+          <span class="person-name-text">BESCOM</span>
+        </div>
+        <div class="person-card" onclick="startPay('Swiggy','swiggy@icici','S','Swiggy')">
+          <div class="biz-circle" style="background:#feefe3;color:#e65100;">🍊</div>
+          <span class="person-name-text">Swiggy</span>
+        </div>
+      </div>
+
+      <!-- Promotions Section -->
+      <div class="gpay-section-header">
+        <div class="gpay-section-title">Promotions</div>
+      </div>
+      <div class="promo-grid">
+        <div class="promo-item" onclick="alert('Congratulations! You have 3 scratch cards available in Rewards.')">
+          <div class="promo-icon" style="background:#e8f0fe;color:#1a73e8;">🎁<span class="promo-badge">₹525</span></div>
+          <span class="person-name-text">Rewards</span>
+        </div>
+        <div class="promo-item" onclick="alert('Offers: Get up to ₹100 cashback on mobile recharge & bills!')">
+          <div class="promo-icon" style="background:#feefe3;color:#e65100;">🏷️</div>
+          <span class="person-name-text">Offers</span>
+        </div>
+        <div class="promo-item" onclick="alert('Referral Code: kanha9002 - Invite friends and get ₹201 on their first payment!')">
+          <div class="promo-icon" style="background:#e6f4ea;color:#137333;">👥<span class="promo-badge">₹201</span></div>
+          <span class="person-name-text">Referrals</span>
+        </div>
+        <div class="promo-item" onclick="alert('Indi-Home: Complete transactions to build houses and earn rewards!')">
+          <div class="promo-icon" style="background:#fce8e6;color:#d93025;">🏡</div>
+          <span class="person-name-text">Indi-Home</span>
+        </div>
+      </div>
+
+      <!-- Manage your money Section -->
+      <div class="gpay-section-header">
+        <div class="gpay-section-title">Manage your money</div>
+      </div>
+      <div class="money-list">
+        <div class="money-item" onclick="alert('Your CIBIL Score is 785 (Excellent) ⭐')">
+          <div class="money-icon">📊</div>
+          <div class="money-info">
+            <div class="money-title">Check your CIBIL score for free</div>
+            <div class="money-sub">Get free credit report & insights</div>
+          </div>
+          <div class="money-arrow">›</div>
+        </div>
+        <div class="money-item" onclick="go('history')">
+          <div class="money-icon">📜</div>
+          <div class="money-info">
+            <div class="money-title">See all payment history</div>
+            <div class="money-sub">View previous transactions & receipts</div>
+          </div>
+          <div class="money-arrow">›</div>
+        </div>
+        <div class="money-item" onclick="showBalanceModal()">
+          <div class="money-icon">🏦</div>
+          <div class="money-info">
+            <div class="money-title">Check bank balance</div>
+            <div class="money-sub">Axis Bank · XX4521</div>
+          </div>
+          <div class="money-arrow">›</div>
+        </div>
+        <div class="money-item" onclick="alert('UPI Lite is active! Pay up to ₹500 without entering PIN.')">
+          <div class="money-icon">⚡</div>
+          <div class="money-info">
+            <div class="money-title">UPI Lite</div>
+            <div class="money-sub">Pin-free instant small payments</div>
+          </div>
+          <div class="money-arrow">›</div>
+        </div>
+      </div>
+
+      <!-- Footer branding -->
+      <div class="gpay-footer-brand">
+        <div>Showing businesses based on your location</div>
+        <div style="font-weight:500;margin-top:4px;color:#202124;">Google Pay · UPI</div>
+      </div>
+
     </div>
     <div class="bottom-nav">
       <div class="nav-item active" onclick="go('home')"><div class="icon">🏠</div><span>Home</span></div>
@@ -687,8 +868,31 @@
       <button class="pay-btn" style="margin-top:28px;max-width:200px;" onclick="go('home')">Back to Home</button>
     </div>
   </div>
+  <!-- BALANCE MODAL -->
+  <div id="balanceModal" class="modal-overlay" onclick="if(event.target===this) hideBalanceModal()">
+    <div class="modal-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h3 style="font-size:18px;font-weight:500;color:#202124;">Bank Balance</h3>
+        <button onclick="hideBalanceModal()" style="border:none;background:none;font-size:22px;color:#5f6368;cursor:pointer;">✕</button>
+      </div>
+      <div style="background:#f8f9fa;border:1px solid #e8eaed;border-radius:16px;padding:20px;text-align:center;">
+        <div style="font-size:13px;color:#5f6368;margin-bottom:4px;">Axis Bank · XX4521</div>
+        <div style="font-size:34px;font-weight:500;color:#202124;letter-spacing:-0.5px;">₹1,00,000.00</div>
+        <div style="font-size:12px;color:#137333;margin-top:8px;font-weight:500;">✓ Account Active & Linked</div>
+      </div>
+      <button class="pay-btn" style="margin-top:20px;" onclick="hideBalanceModal()">Done</button>
+    </div>
+  </div>
 
 <script>
+  // ---- balance modal ----
+  function showBalanceModal() {
+    document.getElementById('balanceModal').classList.add('active');
+  }
+  function hideBalanceModal() {
+    document.getElementById('balanceModal').classList.remove('active');
+  }
+
   // ---- state ----
   let currentRecipient = { name: 'Karan Gupta', upi: '9876543210@ybl', initial: 'K', app: 'PhonePe' };
   let html5QrCode = null;
