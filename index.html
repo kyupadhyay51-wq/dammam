@@ -1024,46 +1024,83 @@
     setTimeout(() => { btn.innerHTML = old; }, 1200);
   }
 
-  // ---- REAL QR SCAN PARSER ----
+  // ---- EMVCo / BHARATQR / UPI QR PARSER ----
+  function parseEmvCo(text) {
+    let pa = '', pn = '', am = '';
+    const idx = text.indexOf('000201');
+    if (idx !== -1) {
+      const payload = text.substring(idx);
+      let pos = 0;
+      while (pos < payload.length - 4) {
+        const tag = payload.substring(pos, pos + 2);
+        const len = parseInt(payload.substring(pos + 2, pos + 4), 10);
+        if (isNaN(len) || len <= 0 || pos + 4 + len > payload.length) break;
+        const val = payload.substring(pos + 4, pos + 4 + len);
+        pos += 4 + len;
+
+        // Tag 59: Merchant Name
+        if (tag === '59' && val) pn = val.trim();
+        // Tag 54: Amount
+        if (tag === '54' && val) am = val.trim();
+        // Tag 26, 27, 51: VPA / UPI ID
+        if (tag === '26' || tag === '27' || tag === '51') {
+          const match = val.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9]+)/i);
+          if (match) pa = match[1];
+        }
+      }
+    }
+    return { pa, pn, am };
+  }
+
   function parseUpiQr(text) {
     let pa = '', pn = '', am = '';
     text = (text || '').trim();
 
-    // 1. Try URLSearchParams if text has query params (pa=, pn=, etc.)
-    if (text.includes('pa=') || text.includes('pn=') || text.includes('am=')) {
-      const qIndex = text.indexOf('?');
-      const queryString = qIndex !== -1 ? text.substring(qIndex + 1) : text;
-      const params = new URLSearchParams(queryString);
+    // 0. Try EMVCo / BharatQR TLV Parser if string contains 000201
+    if (text.includes('000201')) {
+      const emv = parseEmvCo(text);
+      if (emv.pa) pa = emv.pa;
+      if (emv.pn) pn = emv.pn;
+      if (emv.am) am = emv.am;
+    }
 
-      pa = params.get('pa') || params.get('PA') || '';
-      pn = params.get('pn') || params.get('PN') || '';
-      am = params.get('am') || params.get('AM') || '';
+    // 1. Try URLSearchParams if text has query params (pa=, pn=, etc.)
+    if (!pa || !pn || !am) {
+      if (text.includes('pa=') || text.includes('pn=') || text.includes('am=')) {
+        const qIndex = text.indexOf('?');
+        const queryString = qIndex !== -1 ? text.substring(qIndex + 1) : text;
+        const params = new URLSearchParams(queryString);
+
+        if (!pa) pa = params.get('pa') || params.get('PA') || '';
+        if (!pn) pn = params.get('pn') || params.get('PN') || '';
+        if (!am) am = params.get('am') || params.get('AM') || '';
+      }
     }
 
     // 2. Regex fallback for UPI ID (pa)
     if (!pa) {
-      const paMatch = text.match(/(?:pa=)?([a-zA-Z0-9._-]+@[a-zA-Z0-9]+)/i);
+      const paMatch = text.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9]+)/i);
       if (paMatch) pa = paMatch[1];
     }
 
-    // 3. Regex fallback for Name (pn)
+    // 3. Regex fallback for Name (pn / name / org)
     if (!pn) {
-      const pnMatch = text.match(/pn=([^&]+)/i);
+      const pnMatch = text.match(/(?:pn|name|org)=([^&]+)/i);
       if (pnMatch) pn = pnMatch[1];
     }
 
-    // 4. Regex fallback for Amount (am)
+    // 4. Regex fallback for Amount (am / amount)
     if (!am) {
-      const amMatch = text.match(/am=([0-9.]+)/i);
+      const amMatch = text.match(/(?:am|amount)=([0-9.]+)/i);
       if (amMatch) am = amMatch[1];
     }
 
-    // Clean up URI components (%20, + into spaces)
+    // Clean up URI escapes (%20, +)
     try { if (pn) pn = decodeURIComponent(pn.replace(/\+/g, ' ')); } catch (e) {}
     try { if (pa) pa = decodeURIComponent(pa.replace(/\+/g, ' ')); } catch (e) {}
     try { if (am) am = decodeURIComponent(am); } catch (e) {}
 
-    // Fallback if plain UPI ID e.g. "9876543210@ybl"
+    // Fallback if plain UPI ID string e.g. "9876543210@ybl"
     if (!pa && text.includes('@') && !text.includes('://')) {
       pa = text;
     }
@@ -1075,12 +1112,16 @@
         pn = 'Merchant (' + handle + ')';
       } else {
         pn = handle.replace(/[._0-9]/g, ' ').replace(/\s+/g, ' ').trim();
-        pn = pn.replace(/\b\w/g, c => c.toUpperCase()) || 'Merchant';
+        pn = pn.replace(/\b\w/g, c => c.toUpperCase()) || 'Merchant Store';
       }
     }
 
-    if (!pn) pn = 'UPI Merchant';
-    if (!pa) pa = 'scanned.merchant@okaxis';
+    // Fallback for raw text scanned
+    if (!pa) pa = text.replace(/[^a-zA-Z0-9.@_-]/g, '') || 'scanned.merchant@okaxis';
+    if (!pn) {
+      const part = pa.split('@')[0] || 'Merchant';
+      pn = part.replace(/[^a-zA-Z0-9]/g, ' ').trim().replace(/\b\w/g, c => c.toUpperCase()) || 'Merchant Store';
+    }
 
     return { pa, pn, am };
   }
@@ -1105,6 +1146,36 @@
     onScanSuccess("upi://pay?pa=supermart@okaxis&pn=SuperMart Store&am=250");
   }
 
+  function resizeImageFile(file, maxWidth, maxHeight) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        if (width > maxWidth || height > maxHeight) {
+          if (width > height) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          } else {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error("Canvas blob failed"));
+        }, 'image/jpeg', 0.9);
+      };
+      img.onerror = (e) => reject(e);
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
   async function handleQrUpload(input) {
     if (!input.files || input.files.length === 0) return;
     const file = input.files[0];
@@ -1124,14 +1195,25 @@
       }
     }
 
+    // Try scanning file directly first
     html5QrCode.scanFile(file, true)
       .then(decodedText => {
         onScanSuccess(decodedText);
       })
-      .catch(err => {
-        console.warn("QR file scan failed:", err);
-        // Clean fallback
-        onScanSuccess("upi://pay?pa=scanned.qr@okaxis&pn=QR Merchant&am=150");
+      .catch(async (err) => {
+        console.warn("Direct scanFile failed, trying canvas rescaled scan...", err);
+        try {
+          // Downscale high-resolution photo from phone gallery and retry
+          const resizedBlob = await resizeImageFile(file, 800, 800);
+          const text = await html5QrCode.scanFile(resizedBlob, true);
+          onScanSuccess(text);
+        } catch (err2) {
+          console.error("Rescaled image scan failed:", err2);
+          const userUpi = prompt("Could not auto-read QR from image quality. Please enter the UPI ID / VPA manually:");
+          if (userUpi && userUpi.trim()) {
+            onScanSuccess(userUpi.trim());
+          }
+        }
       });
   }
 
