@@ -928,22 +928,43 @@
   // ---- pay helpers ----
   function startPay(name, upi, initial, app) {
     let finalName = (name || '').trim();
-    if (!finalName && upi) {
-      const part = upi.split('@')[0] || 'User';
-      finalName = part.replace(/[._0-9]/g, ' ').replace(/\s+/g, ' ').trim();
-      finalName = finalName.replace(/\b\w/g, c => c.toUpperCase()) || 'UPI User';
+    if (finalName.toLowerCase() === 'default' || finalName.toLowerCase() === 'undefined' || finalName.toLowerCase() === 'null') {
+      finalName = '';
     }
-    if (!finalName) finalName = 'UPI User';
+
+    let finalUpi = (upi || '').trim();
+    if (finalUpi.toLowerCase() === 'default' || finalUpi.toLowerCase() === 'undefined' || finalUpi.toLowerCase() === 'null') {
+      finalUpi = '';
+    }
+
+    if (!finalName && finalUpi) {
+      const part = finalUpi.split('@')[0] || 'User';
+      if (/^\d{10}$/.test(part)) {
+        finalName = 'User (' + part + ')';
+      } else {
+        finalName = part.replace(/[._0-9]/g, ' ').replace(/\s+/g, ' ').trim();
+        finalName = finalName.replace(/\b\w/g, c => c.toUpperCase()) || 'UPI User';
+      }
+    }
+
+    if (!finalName) finalName = 'UPI Merchant';
+    if (!finalUpi) finalUpi = 'scanned.merchant@okaxis';
 
     currentRecipient = {
       name: finalName,
-      upi: upi || '',
+      upi: finalUpi,
       initial: (initial || finalName.charAt(0) || 'U').toUpperCase(),
-      app: app || detectApp(upi)
+      app: detectApp(finalUpi)
     };
+
+    // Update ALL elements on Pay & Success screen immediately!
     document.getElementById('recName').textContent = currentRecipient.name;
     document.getElementById('recUpi').textContent = currentRecipient.upi;
     document.getElementById('recAvatar').textContent = currentRecipient.initial;
+    
+    document.getElementById('succName').textContent = currentRecipient.name;
+    document.getElementById('succUpiLine').textContent = currentRecipient.upi;
+
     document.getElementById('amountInput').value = '';
     document.getElementById('noteInput').value = '';
     document.getElementById('payBtn').disabled = true;
@@ -1090,21 +1111,29 @@
     const num = parseFloat(amount) || 0;
     
     // Ensure clean real recipient details
-    const recipientName = currentRecipient.name || 'UPI Merchant';
-    const recipientUpi = currentRecipient.upi || 'merchant@upi';
+    let recipientName = (currentRecipient.name || '').trim();
+    let recipientUpi = (currentRecipient.upi || '').trim();
+
+    if (!recipientName || recipientName.toLowerCase() === 'default') {
+      recipientName = 'UPI Merchant';
+    }
+    if (!recipientUpi || recipientUpi.toLowerCase() === 'default') {
+      recipientUpi = 'merchant@okaxis';
+    }
     
+    // Set success screen elements immediately
+    document.getElementById('succAmount').textContent = '₹' + num.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    document.getElementById('succName').textContent = recipientName;
+    document.getElementById('succUpiLine').textContent = recipientUpi;
+    document.getElementById('succDate').textContent = formatNow();
+    document.getElementById('succUtr').textContent = 'UPI transaction ID: ' + makeUtr();
+    
+    // Dynamically add to Transaction History
+    addTxToHistory(recipientName, recipientUpi, num);
+
     go('process');
     
     setTimeout(() => {
-      document.getElementById('succAmount').textContent = '₹' + num.toLocaleString('en-IN', { maximumFractionDigits: 2 });
-      document.getElementById('succName').textContent = recipientName;
-      document.getElementById('succUpiLine').textContent = recipientUpi;
-      document.getElementById('succDate').textContent = formatNow();
-      document.getElementById('succUtr').textContent = 'UPI transaction ID: ' + makeUtr();
-      
-      // Dynamically add to Transaction History
-      addTxToHistory(recipientName, recipientUpi, num);
-
       // Play GPay 1-second Payment Success Chime Sound!
       playGPaySuccessSound();
 
