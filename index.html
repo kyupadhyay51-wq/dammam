@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Google Pay</title>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    height: 100%;
+    font-family: 'Roboto', 'Google Sans', system-ui, -apple-system, sans-serif;
+    background: #fff;
+    color: #202124;
+    max-width: 420px;
+    margin: 0 auto;
+    overflow: hidden;
+    position: relative;
+  }
+  .status-bar {
+    height: 28px;
+    background: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 14px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #202124;
+    z-index: 100;
+  }
+  .status-right { display: flex; gap: 7px; align-items: center; }
+  .dot { width: 4px; height: 4px; background: #202124; border-radius: 50%; }
+  .sig { width: 15px; height: 11px; background: linear-gradient(to top, #202124 30%, #202124 30%, transparent 30%); border-radius: 1px; position: relative; }
+  .sig::before { content:''; position:absolute; right:-3px; top:3px; width:2px; height:5px; background:#202124; border-radius:0 1px 1px 0; }
+  .bat { width: 20px; height: 10px; border: 1.5px solid #202124; border-radius: 2px; position: relative; }
+  .bat::after { content:''; position:absolute; right:-3px; top:2px; width:2px; height:4px; background:#202124; border-radius:0 1px 1px 0; }
+  .bat-fill { position:absolute; left:1px; top:1px; bottom:1px; width:70%; background:#202124; border-radius:1px; }
+
+  .screen {
+    display: none;
+    flex-direction: column;
+    height: calc(100vh - 28px);
+    height: calc(100dvh - 28px);
+    background: #fff;
+    position: absolute;
+    top: 28px; left: 0; right: 0; bottom: 0;
+    overflow: hidden;
+  }
+  .screen.active { display: flex; }
+
+  /* ===== HOME ===== */
+  .home-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 72px; }
+  .home-top {
+    background: linear-gradient(180deg, #e8f0fe 0%, #ffffff 70%);
+    padding: 16px 16px 20px;
+  }
+  .profile-row { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .avatar {
+    width: 46px; height: 46px; border-radius: 50%;
+    background: linear-gradient(135deg, #4285f4, #34a853);
+    color: #fff; font-weight: 500; font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .profile-info h2 { font-size: 16px; font-weight: 500; color: #202124; }
+  .profile-info p { font-size: 13px; color: #5f6368; margin-top: 1px; }
+  .balance-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 18px 18px 14px;
+    box-shadow: 0 1px 2px rgba(60,64,67,.08), 0 2px 8px rgba(60,64,67,.06);
+    border: 1px solid #e8eaed;
+  }
+  .balance-label { font-size: 13px; color: #5f6368; margin-bottom: 2px; }
+  .balance-amount { font-size: 30px; font-weight: 500; letter-spacing: -0.6px; color: #202124; }
+  .balance-amount span { font-size: 20px; color: #5f6368; font-weight: 400; }
+  .upi-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f3f4;
+  }
+  .upi-id { font-size: 13px; color: #5f6368; }
+  .upi-id strong { color: #202124; font-weight: 500; }
+  .copy-upi {
+    font-size: 12px; color: #1a73e8; background: none; border: none;
+    font-weight: 500; cursor: pointer; padding: 4px 0;
+  }
+
+  .quick-actions {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 12px; padding: 22px 16px 8px;
+  }
+  .action-item { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
+  .action-icon {
+    width: 54px; height: 54px; border-radius: 16px;
+    background: #e8f0fe; color: #1a73e8;
+    display: flex; align-items: center; justify-content: center; font-size: 22px;
+  }
+  .action-item span { font-size: 11px; color: #5f6368; text-align: center; line-height: 1.25; }
+
+  .section { padding: 16px 16px 8px; }
+  .section-title {
+    font-size: 12px; font-weight: 500; color: #5f6368;
+    text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 12px;
+  }
+  .people-row { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 6px; }
+  .people-row::-webkit-scrollbar { display: none; }
+  .person { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 60px; cursor: pointer; }
+  .person-avatar {
+    width: 50px; height: 50px; border-radius: 50%;
+    background: #f1f3f4; color: #5f6368;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; font-weight: 500; border: 2px solid #e8eaed;
+  }
+  .person-avatar.blue { background: #e8f0fe; color: #1a73e8; border-color: #d2e3fc; }
+  .person-avatar.green { background: #e6f4ea; color: #137333; border-color: #ceead6; }
+  .person-name { font-size: 11px; color: #202124; max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
+
+  .tx-list { padding: 0 16px 20px; }
+  .tx-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 13px 0; border-bottom: 1px solid #f1f3f4;
+  }
+  .tx-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: #f1f3f4; color: #5f6368;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 500; flex-shrink: 0;
+  }
+  .tx-info { flex: 1; min-width: 0; }
+  .tx-info h4 { font-size: 14px; font-weight: 500; color: #202124; }
+  .tx-info p { font-size: 12px; color: #5f6368; margin-top: 2px; }
+  .tx-amount { font-size: 14px; font-weight: 500; white-space: nowrap; }
+  .tx-amount.credit { color: #137333; }
+  .tx-amount.debit { color: #202124; }
+
+  .bottom-nav {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 64px; background: #fff;
+    border-top: 1px solid #e8eaed;
+    display: flex; justify-content: space-around; align-items: center;
+    padding-bottom: env(safe-area-inset-bottom, 6px);
+    z-index: 20;
+  }
+  .nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    color: #5f6368; font-size: 10px; cursor: pointer; min-width: 56px;
+  }
+  .nav-item.active { color: #1a73e8; }
+  .nav-item .icon { font-size: 20px; line-height: 1; }
+
+  /* ===== HEADER ===== */
+  .header {
+    display: flex; align-items: center;
+    padding: 8px 8px 8px 4px;
+    background: #fff;
+    border-bottom: 1px solid #e8eaed;
+    min-height: 52px;
+    flex-shrink: 0;
+  }
+  .back-btn {
+    width: 44px; height: 44px; border: none; background: none;
+    font-size: 22px; color: #5f6368; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .header-title { flex: 1; font-size: 17px; font-weight: 500; color: #202124; }
+  .header-icons { display: flex; gap: 12px; padding-right: 8px; }
+  .header-icons span { font-size: 18px; color: #5f6368; cursor: pointer; }
+
+  /* ===== SCAN ===== */
+  #scan .header { background: #000; border: none; }
+  #scan .back-btn, #scan .header-title, #scan .header-icons span { color: #fff; }
+  .scan-area {
+    flex: 1; background: #000; position: relative;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  #qr-reader { width: 100%; height: 100%; position: absolute; inset: 0; }
+  #qr-reader video { object-fit: cover !important; width: 100% !important; height: 100% !important; }
+  .scan-frame {
+    width: 240px; height: 240px; border: 2px solid rgba(255,255,255,0.85);
+    border-radius: 18px; position: relative; z-index: 5;
+    box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
+    pointer-events: none;
+  }
+  .scan-frame .c {
+    position: absolute; width: 28px; height: 28px;
+    border: 3.5px solid #34a853;
+  }
+  .scan-frame .c.tl { top: -2px; left: -2px; border-right: none; border-bottom: none; border-radius: 10px 0 0 0; }
+  .scan-frame .c.tr { top: -2px; right: -2px; border-left: none; border-bottom: none; border-radius: 0 10px 0 0; }
+  .scan-frame .c.bl { bottom: -2px; left: -2px; border-right: none; border-top: none; border-radius: 0 0 0 10px; }
+  .scan-frame .c.br { bottom: -2px; right: -2px; border-left: none; border-top: none; border-radius: 0 0 10px 0; }
+  .scan-line {
+    position: absolute; left: 8px; right: 8px; height: 2px;
+    background: linear-gradient(90deg, transparent, #34a853, transparent);
+    animation: scanY 2.2s ease-in-out infinite;
+  }
+  @keyframes scanY {
+    0% { top: 10px; } 50% { top: calc(100% - 12px); } 100% { top: 10px; }
+  }
+  .scan-hint {
+    position: absolute; bottom: 110px; left: 0; right: 0;
+    text-align: center; color: #fff; font-size: 14px; z-index: 6;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+  }
+  .scan-actions {
+    position: absolute; bottom: 36px; left: 0; right: 0;
+    display: flex; justify-content: center; gap: 36px; z-index: 6;
+  }
+  .scan-btn {
+    width: 52px; height: 52px; border-radius: 50%;
+    background: rgba(255,255,255,0.18); border: none; color: #fff;
+    font-size: 22px; cursor: pointer; backdrop-filter: blur(10px);
+  }
+  .scan-manual {
+    position: absolute; top: 16px; right: 16px; z-index: 6;
+    background: rgba(0,0,0,0.45); color: #fff; border: none;
+    padding: 8px 14px; border-radius: 20px; font-size: 13px; cursor: pointer;
+  }
+
+  /* ===== PAY UPI / AMOUNT ===== */
+  .pay-body { flex: 1; padding: 20px 18px; overflow-y: auto; }
+  .recipient-card {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px; background: #f8f9fa; border-radius: 12px; margin-bottom: 24px;
+  }
+  .recipient-avatar {
+    width: 46px; height: 46px; border-radius: 50%;
+    background: #e8f0fe; color: #1a73e8;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 500; font-size: 17px; flex-shrink: 0;
+  }
+  .recipient-info h3 { font-size: 15px; font-weight: 500; }
+  .recipient-info p { font-size: 13px; color: #5f6368; margin-top: 2px; word-break: break-all; }
+  .amount-section { text-align: center; margin-bottom: 20px; }
+  .currency-row { display: flex; align-items: center; justify-content: center; gap: 2px; }
+  .currency-symbol { font-size: 32px; color: #5f6368; font-weight: 400; }
+  .amount-input {
+    font-size: 44px; font-weight: 400; border: none; outline: none;
+    text-align: center; width: 200px; background: transparent; color: #202124;
+    letter-spacing: -1px;
+  }
+  .amount-input::placeholder { color: #dadce0; }
+  .note-input {
+    width: 100%; border: none; border-bottom: 1px solid #dadce0;
+    padding: 12px 0; font-size: 15px; outline: none; background: transparent; margin-top: 12px;
+  }
+  .note-input::placeholder { color: #9aa0a6; }
+  .pay-footer {
+    padding: 14px 18px 22px; background: #fff;
+    border-top: 1px solid #e8eaed; flex-shrink: 0;
+  }
+  .pay-btn {
+    width: 100%; height: 50px; background: #1a73e8; color: #fff;
+    border: none; border-radius: 25px; font-size: 15px; font-weight: 500;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+  .pay-btn:disabled { background: #dadce0; color: #9aa0a6; cursor: not-allowed; }
+  .pay-btn:active:not(:disabled) { background: #1765cc; }
+
+  .upi-input-wrap { margin-bottom: 16px; }
+  .upi-label { font-size: 13px; color: #5f6368; margin-bottom: 8px; }
+  .upi-field {
+    width: 100%; height: 50px; border: 1px solid #dadce0; border-radius: 8px;
+    padding: 0 14px; font-size: 15px; outline: none;
+  }
+  .upi-field:focus { border-color: #1a73e8; box-shadow: 0 0 0 2px rgba(26,115,232,0.18); }
+
+  /* ===== PROCESS ===== */
+  .process-body {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 40px 24px;
+  }
+  .spinner {
+    width: 56px; height: 56px; border: 3.5px solid #e8f0fe;
+    border-top-color: #1a73e8; border-radius: 50%;
+    animation: spin 0.75s linear infinite; margin-bottom: 24px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .process-text { font-size: 17px; font-weight: 500; color: #202124; margin-bottom: 6px; }
+  .process-sub { font-size: 13px; color: #5f6368; text-align: center; }
+
+  /* ===== SUCCESS (exact screenshot match) ===== */
+  .success-screen {
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  .success-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 28px 20px;
+    text-align: center;
+  }
+  .success-check {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: #1a73e8;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 28px;
+    animation: popIn 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  @keyframes popIn {
+    0% { transform: scale(0); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .success-check svg { width: 36px; height: 36px; }
+  .success-amount {
+    font-size: 32px;
+    font-weight: 400;
+    color: #202124;
+    margin-bottom: 10px;
+    letter-spacing: -0.4px;
+  }
+  .success-to {
+    font-size: 15px;
+    color: #202124;
+    font-weight: 400;
+    margin-bottom: 2px;
+  }
+  .success-name {
+    font-size: 15px;
+    color: #5f6368;
+    margin-bottom: 18px;
+  }
+  .success-meta {
+    font-size: 13px;
+    color: #9aa0a6;
+    line-height: 1.55;
+  }
+  .success-meta .date-line { margin-bottom: 2px; }
+  .success-actions {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    max-width: 320px;
+    padding: 0 8px 12px;
+  }
+  .success-btn {
+    flex: 1;
+    height: 44px;
+    border-radius: 22px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .success-btn.outline {
+    background: #fff;
+    color: #1a73e8;
+    border: 1.5px solid #dadce0;
+  }
+  .success-btn.primary {
+    background: #1a73e8;
+    color: #fff;
+    border: none;
+  }
+  .success-btn.primary:active { background: #1765cc; }
+  .upi-logo-wrap {
+    padding: 16px 0 28px;
+    text-align: center;
+  }
+  .upi-logo-wrap img, .upi-logo-wrap svg {
+    height: 28px;
+    opacity: 0.85;
+  }
+  .upi-powered {
+    font-size: 10px;
+    color: #9aa0a6;
+    letter-spacing: 0.3px;
+    margin-bottom: 4px;
+  }
+
+  /* HISTORY / PROFILE / stubs */
+  .empty-stub {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 40px 24px; text-align: center; color: #5f6368;
+  }
+  .empty-stub p { font-size: 14px; margin-bottom: 6px; }
+  .empty-stub .sub { font-size: 13px; color: #9aa0a6; }
+</style>
+</head>
+<body>
+  <div class="status-bar">
+    <span id="clock">16:58</span>
+    <div class="status-right">
+      <div class="sig"></div>
+      <div class="bat"><div class="bat-fill"></div></div>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div id="home" class="screen active">
+    <div class="home-scroll">
+      <div class="home-top">
+        <div class="profile-row">
+          <div class="avatar">K</div>
+          <div class="profile-info">
+            <h2>Kanha</h2>
+            <p>@kanha9002</p>
+          </div>
+        </div>
+        <div class="balance-card">
+          <div class="balance-label">Available balance</div>
+          <div class="balance-amount"><span>₹</span>1,00,000.00</div>
+          <div class="upi-row">
+            <div class="upi-id">UPI ID: <strong>kanha9002@okaxis</strong></div>
+            <button class="copy-upi" onclick="copyUpi()">Copy</button>
+          </div>
+        </div>
+      </div>
+      <div class="quick-actions">
+        <div class="action-item" onclick="go('scan')">
+          <div class="action-icon">📷</div>
+          <span>Scan any<br>QR code</span>
+        </div>
+        <div class="action-item" onclick="go('payupi')">
+          <div class="action-icon">↑</div>
+          <span>Pay</span>
+        </div>
+        <div class="action-item" onclick="go('bank')">
+          <div class="action-icon">🏦</div>
+          <span>Bank<br>transfer</span>
+        </div>
+        <div class="action-item" onclick="go('self')">
+          <div class="action-icon">👤</div>
+          <span>Self<br>transfer</span>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">People</div>
+        <div class="people-row">
+          <div class="person" onclick="startPay('Karan Gupta','9876543210@ybl','K')">
+            <div class="person-avatar blue">K</div>
+            <div class="person-name">Karan</div>
+          </div>
+          <div class="person" onclick="startPay('Rahul Sharma','rahul.sharma@oksbi','R')">
+            <div class="person-avatar green">R</div>
+            <div class="person-name">Rahul</div>
+          </div>
+          <div class="person" onclick="startPay('Priya Mehta','priya.m@okhdfcbank','P')">
+            <div class="person-avatar">P</div>
+            <div class="person-name">Priya</div>
+          </div>
+          <div class="person" onclick="startPay('Amit Kumar','amit.k@okicici','A')">
+            <div class="person-avatar blue">A</div>
+            <div class="person-name">Amit</div>
+          </div>
+          <div class="person" onclick="go('payupi')">
+            <div class="person-avatar">+</div>
+            <div class="person-name">New</div>
+          </div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">Recent</div>
+      </div>
+      <div class="tx-list">
+        <div class="tx-item">
+          <div class="tx-avatar" style="background:#e8f0fe;color:#1a73e8">K</div>
+          <div class="tx-info"><h4>Paid to Karan Gupta</h4><p>Today · UPI</p></div>
+          <div class="tx-amount debit">-₹250</div>
+        </div>
+        <div class="tx-item">
+          <div class="tx-avatar" style="background:#e6f4ea;color:#137333">↓</div>
+          <div class="tx-info"><h4>Received from Priya</h4><p>Yesterday · UPI</p></div>
+          <div class="tx-amount credit">+₹1,200</div>
+        </div>
+        <div class="tx-item">
+          <div class="tx-avatar">R</div>
+          <div class="tx-info"><h4>Paid to Rahul</h4><p>12 Sep · UPI</p></div>
+          <div class="tx-amount debit">-₹500</div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item active" onclick="go('home')"><div class="icon">🏠</div><span>Home</span></div>
+      <div class="nav-item" onclick="go('scan')"><div class="icon">📷</div><span>Scan</span></div>
+      <div class="nav-item" onclick="go('history')"><div class="icon">📋</div><span>History</span></div>
+      <div class="nav-item" onclick="go('profile')"><div class="icon">☰</div><span>More</span></div>
+    </div>
+  </div>
+
+  <!-- SCAN (real camera + QR) -->
+  <div id="scan" class="screen">
+    <div class="header">
+      <button class="back-btn" onclick="stopScan();go('home')">←</button>
+      <div class="header-title">Scan QR code</div>
+      <div class="header-icons"><span onclick="toggleTorch()">💡</span></div>
+    </div>
+    <div class="scan-area">
+      <div id="qr-reader"></div>
+      <div class="scan-frame">
+        <div class="c tl"></div>
+        <div class="c tr"></div>
+        <div class="c bl"></div>
+        <div class="c br"></div>
+        <div class="scan-line"></div>
+      </div>
+      <div class="scan-hint">Point camera at any UPI QR</div>
+      <button class="scan-manual" onclick="stopScan();go('payupi')">Enter UPI ID</button>
+      <div class="scan-actions">
+        <button class="scan-btn" onclick="stopScan();go('payupi')">✎</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAY UPI -->
+  <div id="payupi" class="screen">
+    <div class="header">
+      <button class="back-btn" onclick="go('home')">←</button>
+      <div class="header-title">Pay to UPI ID</div>
+    </div>
+    <div class="pay-body">
+      <div class="upi-input-wrap">
+        <div class="upi-label">Enter UPI ID or mobile number</div>
+        <input type="text" class="upi-field" id="upiInput" placeholder="name@oksbi / 9876543210@ybl" autocomplete="off">
+      </div>
+      <div class="upi-input-wrap" style="margin-top:12px;">
+        <div class="upi-label">Name (optional – auto from scan)</div>
+        <input type="text" class="upi-field" id="nameInput" placeholder="Recipient name">
+      </div>
+      <button class="pay-btn" style="margin-top:20px;" onclick="resolveUpi()">Continue</button>
+    </div>
+  </div>
+
+  <!-- AMOUNT -->
+  <div id="amount" class="screen">
+    <div class="header">
+      <button class="back-btn" onclick="go('home')">←</button>
+      <div class="header-title">Pay</div>
+    </div>
+    <div class="pay-body">
+      <div class="recipient-card">
+        <div class="recipient-avatar" id="recAvatar">K</div>
+        <div class="recipient-info">
+          <h3 id="recName">Karan Gupta</h3>
+          <p id="recUpi">9876543210@ybl</p>
+        </div>
+      </div>
+      <div class="amount-section">
+        <div class="currency-row">
+          <span class="currency-symbol">₹</span>
+          <input type="text" class="amount-input" id="amountInput" placeholder="0" inputmode="decimal" oninput="checkAmount()">
+        </div>
+        <input type="text" class="note-input" id="noteInput" placeholder="Add a note (optional)">
+      </div>
+    </div>
+    <div class="pay-footer">
+      <button class="pay-btn" id="payBtn" disabled onclick="startPayment()">Pay ₹0</button>
+    </div>
+  </div>
+
+  <!-- PROCESSING -->
+  <div id="process" class="screen">
+    <div class="process-body">
+      <div class="spinner"></div>
+      <div class="process-text">Processing payment</div>
+      <div class="process-sub">Please wait while we complete your payment...</div>
+    </div>
+  </div>
+
+  <!-- SUCCESS – exact screenshot layout -->
+  <div id="success" class="screen">
+    <div class="success-screen">
+      <div class="success-body">
+        <div class="success-check">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <div class="success-amount" id="succAmount">₹250</div>
+        <div class="success-to">Paid to <span id="succName">Karan Gupta</span></div>
+        <div class="success-name" id="succUpiLine">PhonePe · 9876543210@ybl</div>
+        <div class="success-meta">
+          <div class="date-line" id="succDate">7 Jan, 3:21 PM</div>
+          <div id="succUtr">UPI transaction ID: 189273980087</div>
+        </div>
+      </div>
+      <div class="success-actions">
+        <button class="success-btn outline" onclick="shareSuccess()">
+          <span style="font-size:15px;">↗</span> Share screenshot
+        </button>
+        <button class="success-btn primary" onclick="go('home')">Done</button>
+      </div>
+      <div class="upi-logo-wrap">
+        <div class="upi-powered">POWERED BY</div>
+        <svg width="72" height="28" viewBox="0 0 72 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <text x="0" y="20" font-family="Roboto,Arial,sans-serif" font-size="18" font-weight="700" fill="#097939">UPI</text>
+          <circle cx="52" cy="14" r="9" fill="#097939"/>
+          <path d="M48 14 L51 17 L57 10" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div id="history" class="screen">
+    <div class="header">
+      <button class="back-btn" onclick="go('home')">←</button>
+      <div class="header-title">Transaction history</div>
+    </div>
+    <div class="pay-body" style="padding-top:4px;">
+      <div class="tx-list" style="padding:0;">
+        <div class="tx-item">
+          <div class="tx-avatar" style="background:#e8f0fe;color:#1a73e8">K</div>
+          <div class="tx-info"><h4>Paid to Karan Gupta</h4><p id="histDate1">Today · UPI</p></div>
+          <div class="tx-amount debit">-₹250</div>
+        </div>
+        <div class="tx-item">
+          <div class="tx-avatar" style="background:#e6f4ea;color:#137333">↓</div>
+          <div class="tx-info"><h4>Received from Priya</h4><p>Yesterday · UPI</p></div>
+          <div class="tx-amount credit">+₹1,200</div>
+        </div>
+        <div class="tx-item">
+          <div class="tx-avatar">R</div>
+          <div class="tx-info"><h4>Paid to Rahul</h4><p>12 Sep · UPI</p></div>
+          <div class="tx-amount debit">-₹500</div>
+        </div>
+        <div class="tx-item">
+          <div class="tx-avatar">A</div>
+          <div class="tx-info"><h4>Paid to Amit</h4><p>10 Sep · UPI</p></div>
+          <div class="tx-amount debit">-₹2,000</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE -->
+  <div id="profile" class="screen">
+    <div class="header">
+      <button class="back-btn" onclick="go('home')">←</button>
+      <div class="header-title">Account</div>
+    </div>
+    <div class="pay-body">
+      <div class="recipient-card">
+        <div class="recipient-avatar" style="background:linear-gradient(135deg,#4285f4,#34a853);color:#fff;">K</div>
+        <div class="recipient-info">
+          <h3>Kanha</h3>
+          <p>kanha9002@okaxis</p>
+        </div>
+      </div>
+      <div style="font-size:14px;color:#5f6368;line-height:1.9;padding:4px 4px 0;">
+        <p><strong style="color:#202124;">Balance</strong> · ₹1,00,000.00</p>
+        <p><strong style="color:#202124;">Bank</strong> · Axis Bank · XX4521</p>
+        <p><strong style="color:#202124;">UPI ID</strong> · kanha9002@okaxis</p>
+        <p><strong style="color:#202124;">Mobile</strong> · +91 90021 11850</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- BANK / SELF -->
+  <div id="bank" class="screen">
+    <div class="header">
+      <button class="back-btn" onclick="go('home')">←</button>
+      <div class="header-title">Bank transfer</div>
+    </div>
+    <div class="empty-stub">
+      <p>Transfer to any bank account</p>
+      <p class="sub">Use Scan or Pay to UPI for demo flow</p>
+      <button class="pay-btn" style="margin-top:28px;max-width:200px;" onclick="go('home')">Back to Home</button>
+    </div>
+  </div>
+  <div id="self" class="screen">
+    <div class="header">
+      <button class="back-btn" onclick="go('home')">←</button>
+      <div class="header-title">Self transfer</div>
+    </div>
+    <div class="empty-stub">
+      <p>Move money between your accounts</p>
+      <p class="sub">Demo focuses on UPI pay & scan</p>
+      <button class="pay-btn" style="margin-top:28px;max-width:200px;" onclick="go('home')">Back to Home</button>
+    </div>
+  </div>
+
+<script>
+  // ---- state ----
+  let currentRecipient = { name: 'Karan Gupta', upi: '9876543210@ybl', initial: 'K', app: 'PhonePe' };
+  let html5QrCode = null;
+  let scanRunning = false;
+
+  // ---- clock ----
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent = now.toLocaleTimeString('en-IN', {
+      hour: '2-digit', minute: '2-digit', hour12: false
+    });
+  }
+  updateClock();
+  setInterval(updateClock, 20000);
+
+  // ---- navigation ----
+  function go(id) {
+    if (id !== 'scan') stopScan();
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    if (id === 'scan') startScan();
+  }
+
+  function copyUpi() {
+    navigator.clipboard.writeText('kanha9002@okaxis').then(() => {
+      const btn = document.querySelector('.copy-upi');
+      btn.textContent = 'Copied';
+      setTimeout(() => btn.textContent = 'Copy', 1400);
+    }).catch(() => {});
+  }
+
+  // ---- pay helpers ----
+  function startPay(name, upi, initial, app) {
+    currentRecipient = {
+      name: name || 'User',
+      upi: upi || '',
+      initial: (initial || name || 'U').charAt(0).toUpperCase(),
+      app: app || detectApp(upi)
+    };
+    document.getElementById('recName').textContent = currentRecipient.name;
+    document.getElementById('recUpi').textContent = currentRecipient.upi;
+    document.getElementById('recAvatar').textContent = currentRecipient.initial;
+    document.getElementById('amountInput').value = '';
+    document.getElementById('noteInput').value = '';
+    document.getElementById('payBtn').disabled = true;
+    document.getElementById('payBtn').textContent = 'Pay ₹0';
+    go('amount');
+  }
+
+  function detectApp(upi) {
+    if (!upi) return 'UPI';
+    const h = upi.toLowerCase();
+    if (h.includes('@ybl') || h.includes('@ibl') || h.includes('@axl')) return 'PhonePe';
+    if (h.includes('@okaxis') || h.includes('@oksbi') || h.includes('@okhdfcbank') || h.includes('@okicici')) return 'Google Pay';
+    if (h.includes('@paytm')) return 'Paytm';
+    return 'UPI';
+  }
+
+  function resolveUpi() {
+    const upi = document.getElementById('upiInput').value.trim();
+    let name = document.getElementById('nameInput').value.trim();
+    if (!upi) return;
+    if (!name) {
+      const part = upi.split('@')[0] || 'User';
+      name = part.replace(/[._0-9]/g, ' ').replace(/\s+/g, ' ').trim();
+      name = name.replace(/\b\w/g, c => c.toUpperCase()) || 'User';
+    }
+    const initial = name.charAt(0).toUpperCase();
+    startPay(name, upi, initial, detectApp(upi));
+  }
+
+  function checkAmount() {
+    let v = document.getElementById('amountInput').value.replace(/[^0-9.]/g, '');
+    const parts = v.split('.');
+    if (parts.length > 2) v = parts[0] + '.' + parts.slice(1).join('');
+    document.getElementById('amountInput').value = v;
+    const num = parseFloat(v) || 0;
+    const btn = document.getElementById('payBtn');
+    if (num > 0) {
+      btn.disabled = false;
+      btn.textContent = 'Pay ₹' + num.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    } else {
+      btn.disabled = true;
+      btn.textContent = 'Pay ₹0';
+    }
+  }
+
+  function formatNow() {
+    const d = new Date();
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const day = d.getDate();
+    const mon = months[d.getMonth()];
+    let h = d.getHours();
+    const m = d.getMinutes().toString().padStart(2, '0');
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return `${day} ${mon}, ${h}:${m} ${ampm}`;
+  }
+
+  // Fixed-style UTR (12 digits, looks real)
+  function makeUtr() {
+    // Always same visual style as screenshot: 12-digit number
+    const base = '189273980087';
+    // slight variation so each payment feels unique but format identical
+    let n = '';
+    for (let i = 0; i < 12; i++) n += Math.floor(Math.random() * 10);
+    return n;
+  }
+
+  function startPayment() {
+    const amount = document.getElementById('amountInput').value || '0';
+    const num = parseFloat(amount) || 0;
+    go('process');
+    setTimeout(() => {
+      document.getElementById('succAmount').textContent = '₹' + num.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+      document.getElementById('succName').textContent = currentRecipient.name;
+      document.getElementById('succUpiLine').textContent = currentRecipient.app + ' · ' + currentRecipient.upi;
+      document.getElementById('succDate').textContent = formatNow();
+      document.getElementById('succUtr').textContent = 'UPI transaction ID: ' + makeUtr();
+      go('success');
+    }, 2100);
+  }
+
+  function shareSuccess() {
+    // just visual – no real share needed for demo
+    const btn = event.currentTarget;
+    const old = btn.innerHTML;
+    btn.innerHTML = 'Shared ✓';
+    setTimeout(() => { btn.innerHTML = old; }, 1200);
+  }
+
+  // ---- REAL QR SCAN ----
+  function onScanSuccess(decodedText) {
+    stopScan();
+    // Parse UPI QR: upi://pay?pa=xxx@ybl&pn=Name&am=...
+    let upi = '', name = '', amount = '';
+    try {
+      if (decodedText.toLowerCase().startsWith('upi://')) {
+        const u = new URL(decodedText);
+        upi = u.searchParams.get('pa') || '';
+        name = u.searchParams.get('pn') || '';
+        amount = u.searchParams.get('am') || '';
+      } else if (decodedText.includes('@')) {
+        // plain UPI id
+        upi = decodedText.trim();
+      } else {
+        // fallback: treat whole string as upi-ish
+        upi = decodedText.trim();
+      }
+    } catch (e) {
+      upi = decodedText.trim();
+    }
+    if (!name && upi) {
+      const part = upi.split('@')[0] || 'User';
+      name = part.replace(/[._0-9]/g, ' ').replace(/\s+/g, ' ').trim();
+      name = name.replace(/\b\w/g, c => c.toUpperCase()) || 'Merchant';
+    }
+    if (!name) name = 'Merchant';
+    const initial = name.charAt(0).toUpperCase();
+    startPay(name, upi || 'scanned@upi', initial, detectApp(upi));
+    if (amount && parseFloat(amount) > 0) {
+      document.getElementById('amountInput').value = amount;
+      checkAmount();
+    }
+  }
+
+  function startScan() {
+    if (scanRunning) return;
+    const el = document.getElementById('qr-reader');
+    el.innerHTML = '';
+    html5QrCode = new Html5Qrcode('qr-reader');
+    const config = { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 };
+    html5QrCode.start(
+      { facingMode: 'environment' },
+      config,
+      onScanSuccess,
+      () => {}
+    ).then(() => {
+      scanRunning = true;
+    }).catch(err => {
+      // camera denied / unavailable – still allow manual entry
+      console.warn('Camera:', err);
+      el.innerHTML = '<div style="color:#fff;text-align:center;padding:40px 20px;font-size:14px;">Camera unavailable.<br>Use “Enter UPI ID”.</div>';
+    });
+  }
+
+  function stopScan() {
+    if (html5QrCode && scanRunning) {
+      html5QrCode.stop().then(() => {
+        scanRunning = false;
+        html5QrCode.clear();
+      }).catch(() => { scanRunning = false; });
+    }
+  }
+
+  function toggleTorch() {
+    // best-effort; many browsers ignore
+    try {
+      if (html5QrCode && scanRunning) {
+        // no public torch API in html5-qrcode stable – ignore silently
+      }
+    } catch (e) {}
+  }
+
+  // seed default on load
+  document.getElementById('upiInput').value = '';
+  document.getElementById('nameInput').value = '';
+</script>
+</body>
+</html>
