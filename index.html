@@ -731,7 +731,10 @@
       <div class="recipient-card">
         <div class="recipient-avatar" id="recAvatar">K</div>
         <div class="recipient-info">
-          <h3 id="recName">Karan Gupta</h3>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <h3 id="recName" contenteditable="true" style="outline:none;cursor:text;" title="Tap to edit name" onblur="if(this.textContent.trim()) { currentRecipient.name = this.textContent.trim(); document.getElementById('succName').textContent = currentRecipient.name; }">Karan Gupta</h3>
+            <span style="font-size:12px;color:#1a73e8;cursor:pointer;" title="Edit name">✏️</span>
+          </div>
           <p id="recUpi">9876543210@ybl</p>
         </div>
       </div>
@@ -928,26 +931,27 @@
   // ---- pay helpers ----
   function startPay(name, upi, initial, app) {
     let finalName = (name || '').trim();
-    if (finalName.toLowerCase() === 'default' || finalName.toLowerCase() === 'undefined' || finalName.toLowerCase() === 'null') {
+    let finalUpi = (upi || '').trim();
+
+    if (!finalName || finalName.toLowerCase() === 'default' || finalName.toLowerCase() === 'undefined' || finalName.toLowerCase() === 'null') {
       finalName = '';
     }
 
-    let finalUpi = (upi || '').trim();
-    if (finalUpi.toLowerCase() === 'default' || finalUpi.toLowerCase() === 'undefined' || finalUpi.toLowerCase() === 'null') {
+    if (!finalUpi || finalUpi.toLowerCase() === 'default' || finalUpi.toLowerCase() === 'undefined' || finalUpi.toLowerCase() === 'null') {
       finalUpi = '';
     }
 
     if (!finalName && finalUpi) {
       const part = finalUpi.split('@')[0] || 'User';
       if (/^\d{10}$/.test(part)) {
-        finalName = 'User (' + part + ')';
+        finalName = 'Pay to ' + part;
       } else {
-        finalName = part.replace(/[._0-9]/g, ' ').replace(/\s+/g, ' ').trim();
-        finalName = finalName.replace(/\b\w/g, c => c.toUpperCase()) || 'UPI User';
+        let clean = part.replace(/[._0-9]/g, ' ').replace(/\s+/g, ' ').trim();
+        finalName = clean.replace(/\b\w/g, c => c.toUpperCase()) || finalUpi;
       }
     }
 
-    if (!finalName) finalName = 'UPI Merchant';
+    if (!finalName) finalName = 'UPI Recipient';
     if (!finalUpi) finalUpi = 'scanned.merchant@okaxis';
 
     currentRecipient = {
@@ -957,13 +961,22 @@
       app: detectApp(finalUpi)
     };
 
-    // Update ALL elements on Pay & Success screen immediately!
-    document.getElementById('recName').textContent = currentRecipient.name;
-    document.getElementById('recUpi').textContent = currentRecipient.upi;
-    document.getElementById('recAvatar').textContent = currentRecipient.initial;
+    // Update Recipient Card on Amount Screen
+    const recNameEl = document.getElementById('recName');
+    if (recNameEl) recNameEl.textContent = currentRecipient.name;
     
-    document.getElementById('succName').textContent = currentRecipient.name;
-    document.getElementById('succUpiLine').textContent = currentRecipient.upi;
+    const recUpiEl = document.getElementById('recUpi');
+    if (recUpiEl) recUpiEl.textContent = currentRecipient.upi;
+    
+    const recAvatarEl = document.getElementById('recAvatar');
+    if (recAvatarEl) recAvatarEl.textContent = currentRecipient.initial;
+
+    // Update Success Screen elements in advance
+    const succNameEl = document.getElementById('succName');
+    if (succNameEl) succNameEl.textContent = currentRecipient.name;
+    
+    const succUpiEl = document.getElementById('succUpiLine');
+    if (succUpiEl) succUpiEl.textContent = currentRecipient.upi;
 
     document.getElementById('amountInput').value = '';
     document.getElementById('noteInput').value = '';
@@ -1181,7 +1194,17 @@
     let pa = '', pn = '', am = '';
     text = (text || '').trim();
 
-    // 0. Try EMVCo / BharatQR TLV Parser if string contains 000201
+    // 0. Try JSON payload if string is JSON
+    if (text.startsWith('{') && text.endsWith('}')) {
+      try {
+        const obj = JSON.parse(text);
+        pa = obj.pa || obj.upi || obj.vpa || obj.upiId || '';
+        pn = obj.pn || obj.name || obj.merchantName || obj.receiverName || '';
+        am = obj.am || obj.amount || '';
+      } catch (e) {}
+    }
+
+    // 1. Try EMVCo / BharatQR TLV Parser if string contains 000201
     if (text.includes('000201')) {
       const emv = parseEmvCo(text);
       if (emv.pa) pa = emv.pa;
@@ -1189,31 +1212,32 @@
       if (emv.am) am = emv.am;
     }
 
-    // 1. Try URLSearchParams if text has query params (pa=, pn=, name=, etc.)
+    // 2. Try URLSearchParams if text has query params (pa=, pn=, name=, etc.)
     if (text.includes('?')) {
       try {
-        const queryString = text.substring(text.indexOf('?') + 1);
+        const qIndex = text.indexOf('?');
+        const queryString = qIndex !== -1 ? text.substring(qIndex + 1) : text;
         const params = new URLSearchParams(queryString);
 
         if (!pa) pa = params.get('pa') || params.get('PA') || params.get('vpa') || '';
-        if (!pn) pn = params.get('pn') || params.get('PN') || params.get('name') || params.get('fn') || params.get('org') || params.get('mcn') || '';
+        if (!pn) pn = params.get('pn') || params.get('PN') || params.get('name') || params.get('fn') || params.get('org') || params.get('mcn') || params.get('merchantName') || '';
         if (!am) am = params.get('am') || params.get('AM') || params.get('amount') || '';
       } catch (e) {}
     }
 
-    // 2. Regex fallback for VPA / UPI ID (pa)
+    // 3. Regex fallback for VPA / UPI ID (pa)
     if (!pa) {
       const paMatch = text.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9]+)/i);
       if (paMatch) pa = paMatch[1];
     }
 
-    // 3. Regex fallback for Name (pn / name / fn / org / mcn / biller)
+    // 4. Regex fallback for Name (pn / name / fn / org / mcn / biller)
     if (!pn) {
-      const pnMatch = text.match(/(?:pn|name|fn|org|mcn|biller)=([^&]+)/i);
+      const pnMatch = text.match(/(?:pn|name|fn|org|mcn|biller|merchantName)=([^&]+)/i);
       if (pnMatch) pn = pnMatch[1];
     }
 
-    // 4. Regex fallback for Amount (am / amount)
+    // 5. Regex fallback for Amount (am / amount)
     if (!am) {
       const amMatch = text.match(/(?:am|amount)=([0-9.]+)/i);
       if (amMatch) am = amMatch[1];
@@ -1229,21 +1253,21 @@
       pa = text;
     }
 
-    // Derive readable display name if missing
+    // Format clean, beautiful display name from UPI handle if pn is missing
     if (!pn && pa) {
       const handle = pa.split('@')[0] || '';
       if (/^\d{10}$/.test(handle)) {
-        pn = 'Merchant (' + handle + ')';
+        pn = 'Pay to ' + handle;
       } else {
-        pn = handle.replace(/[._0-9]/g, ' ').replace(/\s+/g, ' ').trim();
-        pn = pn.replace(/\b\w/g, c => c.toUpperCase()) || 'Merchant Store';
+        let clean = handle.replace(/[._0-9]/g, ' ').replace(/\s+/g, ' ').trim();
+        pn = clean.replace(/\b\w/g, c => c.toUpperCase()) || pa;
       }
     }
 
     if (!pa) pa = 'scanned.merchant@okaxis';
     if (!pn) {
       const part = pa.split('@')[0] || 'Merchant';
-      pn = part.replace(/[^a-zA-Z0-9]/g, ' ').trim().replace(/\b\w/g, c => c.toUpperCase()) || 'Merchant Store';
+      pn = part.replace(/[^a-zA-Z0-9]/g, ' ').trim().replace(/\b\w/g, c => c.toUpperCase()) || 'UPI Recipient';
     }
 
     return { pa, pn, am };
